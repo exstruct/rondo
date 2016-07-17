@@ -5,7 +5,8 @@ defmodule Rondo.Application do
   defstruct [phase: @init,
              manager: nil,
              components: %{},
-             entry: nil]
+             entry: nil,
+             actions: MapSet.new()]
 
   def init(entry, manager) do
     %__MODULE__{entry: entry, manager: manager}
@@ -13,9 +14,18 @@ defmodule Rondo.Application do
 
   def render(prev = %{entry: entry}) do
     context = %{}
-    current = %{prev | components: %{}, phase: @render}
+    current = %{prev | components: %{}, actions: MapSet.new(), phase: @render}
     Rondo.Path.create_root()
     |> Rondo.Component.mount(entry, context, current, prev)
+    |> init_actions()
+  end
+
+  defp init_actions(app = %{actions: actions}) do
+    actions = Enum.reduce(actions, %{}, fn(action, acc) ->
+      IO.inspect action
+      acc
+    end)
+    %{app | actions: actions}
   end
 
   def action(app = %{phase: @render}, _action) do
@@ -26,11 +36,14 @@ defmodule Rondo.Application do
     Map.fetch(components, path)
   end
 
-  def put_component(app = %{components: components}, path, component) do
+  def put_component(app = %{components: components, actions: actions}, path, component) do
     if Map.has_key?(components, path) do
       throw :cannot_update_mounted_component
     end
-    %{app | components: Map.put(components, path, component)}
+    %{tree: %{actions: c_actions}} = component
+    %{app |
+       components: Map.put(components, path, component),
+       actions: MapSet.union(actions, c_actions)}
   end
 
   def get_state(app = %{manager: manager}, component_path, state_path, descriptor) do

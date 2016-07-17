@@ -79,9 +79,11 @@ end
 defimpl Rondo.Traverser, for: Rondo.Element do
   def traverse(node, path, acc, prewalk, postwalk) do
     {node, path} = replace_path(node, path)
-    {node = %{children: children}, acc} = prewalk.(node, path, acc)
+
+    {node = %{props: props, children: children}, acc} = prewalk.(node, path, acc)
+    {props, acc} = Rondo.Traverser.traverse(props, path, acc, prewalk, postwalk)
     {children, acc} = Rondo.Traverser.traverse(children, path, acc, prewalk, postwalk)
-    postwalk.(%{node | children: children}, path, acc)
+    postwalk.(%{node | props: props, children: children}, path, acc)
   end
 
   defp replace_path(node = %{key: key}, [_ | path]) do

@@ -1,5 +1,5 @@
 defmodule Rondo.Tree do
-  defstruct [:descriptor, :root, :children]
+  defstruct [:descriptor, :root, :children, :actions]
 
   defmodule Placeholder do
     defstruct [:path]
@@ -8,25 +8,29 @@ defmodule Rondo.Tree do
   alias Rondo.Path
 
   def init(nil, descriptor, component_path) do
-    init(%__MODULE__{children: %{}}, descriptor, component_path)
+    init(%__MODULE__{children: %{}, actions: MapSet.new()}, descriptor, component_path)
   end
   def init(tree = %{descriptor: descriptor}, descriptor, _) do
     tree
   end
   def init(tree, descriptor, component_path) do
-    {root, children} = traverse(descriptor, component_path)
+    {root, {children, actions}} = traverse(descriptor, component_path)
     %{tree |
        descriptor: descriptor,
        root: root,
-       children: children}
+       children: children,
+       actions: actions}
   end
 
   def traverse(descriptor, component_path) do
-    Rondo.Traverser.postwalk(descriptor, [], %{}, fn
-      (%Rondo.Element{type: type} = el, path, acc) when is_atom(type) ->
+    Rondo.Traverser.postwalk(descriptor, [], {%{}, MapSet.new()}, fn
+      (%Rondo.Element{type: type} = el, path, {children, actions}) when is_atom(type) ->
         path = Path.create_child_path(component_path, path)
-        acc = Map.put(acc, path, el)
-        {%Placeholder{path: path}, acc}
+        children = Map.put(children, path, el)
+        {%Placeholder{path: path}, {children, actions}}
+      (%Rondo.Action{} = action, _path, {children, actions}) ->
+        actions = MapSet.put(actions, action)
+        {action, {children, actions}}
       (node, _, acc) ->
         {node, acc}
     end)
