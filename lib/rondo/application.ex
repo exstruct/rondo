@@ -6,85 +6,50 @@ defmodule Rondo.Application do
              manager: nil,
              components: %{},
              entry: nil,
-             actions: MapSet.new()]
+             actions: %Rondo.Action.Manager{}]
 
-  def init(entry, manager) do
-    %__MODULE__{entry: entry, manager: manager}
+  def init(entry) do
+    %__MODULE__{entry: entry}
   end
 
-  def render(prev = %{entry: entry}) do
-    context = %{}
-    current = %{prev | components: %{}, actions: MapSet.new(), phase: @render}
-    Rondo.Path.create_root()
-    |> Rondo.Component.mount(entry, context, current, prev)
-    |> init_actions()
+  def render(prev = %{entry: entry, actions: actions}, manager, context \\ %{}) do
+    actions = Rondo.Action.Manager.init(actions)
+    current = %{prev | components: %{}, actions: actions, phase: @render, manager: manager}
+    path = Rondo.Path.create_root()
+    app = Rondo.Component.mount(path, entry, context, current, prev)
+
+    {%{app | actions: Rondo.Action.Manager.finalize(app.actions), manager: nil}, app.manager}
   end
 
-  defp init_actions(app = %{actions: actions}) do
-    actions = Enum.reduce(actions, %{}, fn(action, acc) ->
-      IO.inspect action
-      acc
-    end)
-    %{app | actions: actions}
+  def diff(%{components: curr_components, actions: curr_affordances, phase: @render},
+           %{components: prev_components, actions: prev_affordances}) do
+    curr = %{"components" => curr_components, "affordances" => curr_affordances}
+    prev = %{"components" => prev_components, "affordances" => prev_affordances}
+    Rondo.Diff.diff(curr, prev)
   end
 
-  def action(app = %{phase: @render}, _action) do
+  def handle_action(app = %{phase: @render}, _action_ref, _message) do
     app
   end
 
-  def fetch_component(%{components: components}, path) do
+  def __fetch_component__(%{components: components}, path) do
     Map.fetch(components, path)
   end
 
-  def put_component(app = %{components: components, actions: actions}, path, component) do
+  def __put_component__(app = %{components: components}, path, component) do
     if Map.has_key?(components, path) do
       throw :cannot_update_mounted_component
     end
-    %{tree: %{actions: c_actions}} = component
-    %{app |
-       components: Map.put(components, path, component),
-       actions: MapSet.union(actions, c_actions)}
+    %{app | components: Map.put(components, path, component)}
   end
 
-  def get_state(app = %{manager: manager}, component_path, state_path, descriptor) do
-    {store, manager} = Rondo.Manager.create(manager, component_path, state_path, descriptor)
+  def __mount_state__(app = %{manager: manager}, component_path, state_path, descriptor) do
+    {store, manager} = Rondo.Manager.mount(manager, component_path, state_path, descriptor)
     {store, %{app | manager: manager}}
   end
 
-  def update_manager(app, fun) when is_function(fun) do
-    update_manager(app, fun.(app.manager))
-  end
-  def update_manager(app, manager) do
-    %{app | manager: manager}
-  end
-end
-
-defimpl Rondo.Diff, for: Rondo.Application do
-  @render Rondo.Application.RENDER
-
-  alias Rondo.Operation
-
-  def diff(app = %{phase: @render, components: c}, %{components: c}, _path) do
-    {[], app}
-  end
-  def diff(app = %{phase: @render, components: current}, %{components: prev}, _path) do
-    {ops, prev} = Enum.reduce(current, {[], prev}, fn({path, component}, {ops, prev}) ->
-      case Map.fetch(prev, path) do
-        {:ok, ^component} ->
-          {ops, Map.delete(prev, path)}
-        {:ok, prev_component} ->
-          {component_ops, _} = Rondo.Diff.diff(component, prev_component, {path, []})
-          {component_ops ++ ops, Map.delete(prev, path)}
-        :error ->
-          %{tree: %{root: node}} = component
-          {[Operation.replace(path, [], node) | ops], prev}
-      end
-    end)
-
-    prev
-    |> Enum.reduce({ops, app}, fn({path, component}, {ops, app}) ->
-      # TODO unmount the component
-      {[Rondo.Operation.remove(path, []) | ops], app}
-    end)
+  def __put_action__(app = %{actions: actions}, component_path, descriptor) do
+    {affordance, actions} = Rondo.Action.Manager.put(actions, component_path, descriptor)
+    {affordance, %{app | actions: actions}}
   end
 end

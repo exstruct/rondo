@@ -1,12 +1,18 @@
 defmodule Rondo.Operation do
-  defstruct [:op, :component, :path, :value]
-
-  def remove(component, path) do
-    %__MODULE__{component: component, path: path, op: :REMOVE}
+  defmodule Remove do
+    defstruct [:path]
   end
 
-  def replace(component, path, node) do
-    %__MODULE__{component: component, path: path, value: node, op: :REPLACE}
+  defmodule Replace do
+    defstruct [:path, :value]
+  end
+
+  def remove(path) do
+    %Remove{path: :lists.reverse(path)}
+  end
+
+  def replace(path, value) do
+    %Replace{path: :lists.reverse(path), value: value}
   end
 
   # def move

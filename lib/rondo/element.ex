@@ -12,22 +12,23 @@ defmodule Rondo.Element do
     %__MODULE__{key: Map.get(props, :key, nil), type: type, props: props, children: children}
   end
 
-  def init(element, context) do
-    call(element, :init, context, nil)
+  def state(element = %{props: props, children: children}, context) do
+    props = Map.put(props, :children, children)
+    call(element, :state, [props, context], props)
   end
 
   def context(element, state) do
-    call(element, :context, state, %{})
+    call(element, :context, [state], %{})
   end
 
   def render(element, state) do
-    call(element, :render, state, nil)
+    call(element, :render, [state], nil)
   end
 
-  defp call(%{type: type, props: props, children: children}, fun, state, default) when is_atom(type) do
-    case function_exported?(type, fun, 2) do
+  defp call(%{type: type}, fun, args, default) when is_atom(type) do
+    case function_exported?(type, fun, length(args)) do
       true ->
-        apply(type, fun, [Map.put(props, :children, children), state])
+        apply(type, fun, args)
       false ->
         default
     end
@@ -39,19 +40,18 @@ end
 
 defimpl Rondo.Diff, for: Rondo.Element do
   def diff(current, current, _path) do
-    {[], current}
+    []
   end
   def diff(curr = %{type: t, props: p}, prev = %{type: t, props: p}, path) do
-    ops = diff_children(curr, prev, path)
-    {ops, curr}
+    diff_children(curr, prev, path)
   end
-  def diff(curr = %{type: t, props: curr_p}, prev = %{type: t, props: prev_p}, path = {c_path, i_path}) do
+  def diff(curr = %{type: t, props: curr_p}, prev = %{type: t, props: prev_p}, path) do
+    p_ops = Rondo.Diff.diff(curr_p, prev_p, ["props" | path])
     c_ops = diff_children(curr, prev, path)
-    {p_ops, _} = Rondo.Diff.diff(curr_p, prev_p, {c_path, [:"$props" | i_path]})
-    {p_ops ++ c_ops, curr}
+    Stream.concat(p_ops, c_ops)
   end
-  def diff(curr, _, {c_path, path}) do
-    {[Rondo.Operation.replace(c_path, path, curr)], curr}
+  def diff(curr, _, path) do
+    [Rondo.Operation.replace(path, curr)]
   end
 
   defp diff_children(%{children: current}, %{children: current}, _path) do
@@ -60,15 +60,14 @@ defimpl Rondo.Diff, for: Rondo.Element do
   defp diff_children(%{children: current}, %{children: prev}, path) do
     current = children_to_map(current)
     prev = children_to_map(prev)
-    {ops, _} = Rondo.Diff.diff(current, prev, path)
-    ops
+    Rondo.Diff.diff(current, prev, ["children" | path])
   end
 
   defp children_to_map(children) do
     children
     |> Enum.reduce({%{}, 0}, fn
-      (el = %Rondo.Element{key: key}, {map, idx}) ->
-        {Map.put(map, key, el), idx + 1}
+      (el = %Rondo.Element{key: key}, {map, idx}) when not is_nil(key) ->
+        {Map.put(map, key, el), idx}
       (other, {map, idx}) ->
         {Map.put(map, idx, other), idx + 1}
     end)
@@ -86,7 +85,7 @@ defimpl Rondo.Traverser, for: Rondo.Element do
     postwalk.(%{node | props: props, children: children}, path, acc)
   end
 
-  defp replace_path(node = %{key: key}, [_ | path]) do
+  defp replace_path(node = %{key: key}, [_ | path]) when not is_nil(key) do
     {node, [key | path]}
   end
   defp replace_path(node, [key | _] = path) do

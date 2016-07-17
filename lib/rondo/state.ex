@@ -33,7 +33,7 @@ defmodule Rondo.State do
   end
   defp lookup(children, component_path, app) do
     Enum.reduce(children, {%{}, app}, fn({path, descriptor}, {cache, app}) ->
-      {state, app} = Application.get_state(app, component_path, path, descriptor)
+      {state, app} = Application.__mount_state__(app, component_path, path, descriptor)
       {Map.put(cache, path, state), app}
     end)
   end
