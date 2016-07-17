@@ -2,15 +2,20 @@ defmodule Test.Rondo do
   use Test.Rondo.Case
 
   context Foo do
-    defmodule Router do
-      # use Rondo.Router
-      # route "/", Quiz
+    defmodule Manager do
+      defstruct [:number]
+
+      defimpl Rondo.Manager do
+        def create(%{number: number} = manager, c_path, id, descriptor) do
+          {number, manager}
+        end
+      end
     end
 
     defmodule Click do
       use Rondo.Action
 
-      def schema do
+      def affordance(_props) do
         %{
           type: "object",
           properties: %{
@@ -21,7 +26,7 @@ defmodule Test.Rondo do
         }
       end
 
-      def handle(state, %{"x" => x}) do
+      def action(_props, state, %{"x" => x}) do
         put_in(state, [:session, :coord], x)
       end
     end
@@ -29,16 +34,24 @@ defmodule Test.Rondo do
     defmodule NextLevel do
       use Rondo.Component
 
-      def render(_, _) do
-        el("Text")
+      def render(props, _) do
+        el("Text", %{
+            on_click: action(Click, %{})
+           }, [props[:text]])
       end
     end
 
     defmodule Nested do
       use Rondo.Component
 
-      def render(_, _) do
-        [1, el(NextLevel)]
+      def init(_props, context) do
+        %{
+          next: context[:number]
+        }
+      end
+
+      def render(_, %{next: next}) do
+        el(NextLevel, %{text: next})
       end
     end
 
@@ -46,18 +59,15 @@ defmodule Test.Rondo do
       use Rondo.Component
 
       def init(_props, _context) do
-        #user = create_store(auth(Facebook))
         %{
-          #answers: create_store({Quiz123, user.provider, user.id}),
-          #root: create_store(Quiz123),
-          #router: Router.create_store()
-          #user: user
+          root: create_store(%{}, Quiz123),
+          local: create_store(%{})
         }
       end
 
-      def context(_props, _state) do
+      def context(_props, state) do
         %{
-          #router: state.router
+          number: state[:local]
         }
       end
 
@@ -67,10 +77,28 @@ defmodule Test.Rondo do
     end
   after
     "foo" ->
-      app = Rondo.create_app(el(Quiz, %{path: "/"}, [
-              el(Quiz, %{path: "/foo"})
-            ]))
-      Rondo.Application.render(app)
-      |> IO.inspect
+      manager = %Manager{number: :rand.uniform()}
+      app = Rondo.create_application(el(Quiz), manager)
+      {diff1, app1} = render_and_diff(app)
+      app1 = update_manager(app1, fn(manager) ->
+        %{manager | number: "Hello"}
+      end)
+
+      {diff2, app2} = render_and_diff(app1)
+  end
+
+  defp render_and_diff(initial) do
+    IO.puts "====== RENDERING ======"
+    rendered = Rondo.render(initial)
+    IO.inspect rendered.components
+    {diff, app} = Rondo.diff(rendered, initial)
+    IO.puts "-------  DIFF  --------"
+    IO.inspect diff
+    IO.puts "\n"
+    {diff, app}
+  end
+
+  defp update_manager(app, manager) do
+    Rondo.Application.update_manager(app, manager)
   end
 end

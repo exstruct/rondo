@@ -1,4 +1,6 @@
 defprotocol Rondo.Traverser do
+  @fallback_to_any true
+
   def traverse(root, path, acc, prewalk, postwalk)
 
   Kernel.def prewalk(root, path, acc, prewalk) do
@@ -11,13 +13,6 @@ defprotocol Rondo.Traverser do
 
   Kernel.defp noop(node, _, acc) do
     {node, acc}
-  end
-end
-
-defimpl Rondo.Traverser, for: [Integer, Float, BitString] do
-  def traverse(node, path, acc, prewalk, postwalk) do
-    {node, acc} = prewalk.(node, path, acc)
-    postwalk.(node, path, acc)
   end
 end
 
@@ -40,5 +35,12 @@ defimpl Rondo.Traverser, for: List do
       {i + 1, [value | list], acc}
     end)
     postwalk.(:lists.reverse(node), path, acc)
+  end
+end
+
+defimpl Rondo.Traverser, for: Any do
+  def traverse(node, path, acc, prewalk, postwalk) do
+    {node, acc} = prewalk.(node, path, acc)
+    postwalk.(node, path, acc)
   end
 end

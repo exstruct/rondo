@@ -1,17 +1,16 @@
 defmodule Rondo.Store do
-  defstruct [:id, :type]
+  defstruct [:props, :id, :type]
 
   def create_store() do
-    %__MODULE__{id: nil,
-                type: :ephemeral}
+    create_store(%{}, nil, :ephemeral)
   end
-  def create_store(id) do
-    %__MODULE__{id: id,
-                type: :persistent}
+  def create_store(props) do
+    create_store(props, nil, :ephemeral)
   end
-
-  def init(stores, storage) do
-    ## TODO initialize each store from the storage
-    stores
+  def create_store(props, id) do
+    create_store(props, id, :persistent)
+  end
+  def create_store(props, id, type) do
+    %__MODULE__{props: props, id: id, type: type}
   end
 end

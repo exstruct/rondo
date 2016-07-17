@@ -3,30 +3,40 @@ defmodule Rondo.Mixfile do
 
   def project do
     [app: :rondo,
-     version: "0.0.1",
-     elixir: "~> 1.2",
+     version: "0.1.0",
+     elixir: "~> 1.0",
+     description: "",
+     test_coverage: [tool: ExCoveralls],
+     preferred_cli_env: [
+       "bench": :bench,
+       "coveralls": :test,
+       "coveralls.circle": :test,
+       "coveralls.detail": :test,
+       "coveralls.html": :test
+     ],
      build_embedded: Mix.env == :prod,
      start_permanent: Mix.env == :prod,
+     consolidate_protocols: !(Mix.env in [:dev, :test]),
+     package: package,
      deps: deps]
   end
 
-  # Configuration for the OTP application
-  #
-  # Type "mix help compile.app" for more information
   def application do
     [applications: [:logger]]
   end
 
-  # Dependencies can be Hex packages:
-  #
-  #   {:mydep, "~> 0.3.0"}
-  #
-  # Or git/path repositories:
-  #
-  #   {:mydep, git: "https://github.com/elixir-lang/mydep.git", tag: "0.1.0"}
-  #
-  # Type "mix help deps" for more examples and options
   defp deps do
-    []
+    [{:excheck, "~> 0.4.1", only: [:dev, :test, :bench]},
+     {:triq, github: "krestenkrab/triq", only: [:dev, :test, :bench]},
+     {:benchfella, "~> 0.3.1", only: [:dev, :test, :bench]},
+     {:mix_test_watch, "~> 0.2", only: :dev},
+     {:excoveralls, "~> 0.5.1", only: :test},]
+  end
+
+  defp package do
+    [files: ["lib", "mix.exs", "README*"],
+     maintainers: ["Cameron Bytheway"],
+     licenses: ["MIT"],
+     links: %{"GitHub" => "https://github.com/extruct/rondo"}]
   end
 end
