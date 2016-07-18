@@ -1,65 +1,39 @@
 defmodule Rondo.Tree do
   defstruct [:descriptor, :root, :children, :actions]
 
-  defmodule Placeholder do
-    defstruct [:path]
-  end
-
   alias Rondo.Path
+  alias Rondo.Component.Pointer
 
-  def init(nil, descriptor, component_path, app) do
-    init(%__MODULE__{children: %{}, actions: MapSet.new()}, descriptor, component_path, app)
+  def init(nil, descriptor, component_path, state, store) do
+    tree = %__MODULE__{children: %{}, actions: MapSet.new()}
+    init(tree, descriptor, component_path, state, store)
   end
-  def init(tree = %{descriptor: descriptor, actions: actions}, descriptor, component_path, app) do
-    app = Enum.reduce(actions, app, fn(action, app) ->
-      {_, app} = Rondo.Application.__put_action__(app, component_path, action)
-      app
+  def init(tree = %{descriptor: descriptor, actions: actions}, descriptor, component_path, state, store) do
+    store = Enum.reduce(actions, store, fn(action, store) ->
+      {_, store} = Rondo.Action.Store.put(store, component_path, action, state)
+      store
     end)
-    {tree, app}
+    {tree, store}
   end
-  def init(tree, descriptor, component_path, app) do
-    {root, {children, actions, app}} = traverse(descriptor, component_path, app)
-    {%{tree |
-       descriptor: descriptor,
-       root: root,
-       children: children,
-       actions: actions}, app}
+  def init(tree, descriptor, component_path, state, store) do
+    {root, {children, actions, store}} = traverse(descriptor, component_path, state, store)
+    tree = %{tree | descriptor: descriptor, root: root, children: children, actions: actions}
+    {tree, store}
   end
 
-  def traverse(descriptor, component_path, app) do
-    Rondo.Traverser.postwalk(descriptor, [], {%{}, MapSet.new(), app}, fn
-      (%Rondo.Element{type: type} = el, path, {children, actions, app}) when is_atom(type) ->
+  def traverse(descriptor, component_path, state, store) do
+    acc = {%{}, MapSet.new(), store}
+    Rondo.Traverser.postwalk(descriptor, [], acc, fn
+      (%Rondo.Element{type: type} = el, path, {children, actions, store}) when is_atom(type) ->
         path = Path.create_child_path(component_path, path)
         children = Map.put(children, path, el)
-        {%Placeholder{path: path}, {children, actions, app}}
-      (%Rondo.Action{} = action, _path, {children, actions, app}) ->
-        {instance, app} = Rondo.Application.__put_action__(app, component_path, action)
+        {%Pointer{path: path}, {children, actions, store}}
+      (%Rondo.Action{} = action, _path, {children, actions, store}) ->
+        {instance, store} = Rondo.Action.Store.put(store, component_path, action, state)
         actions = MapSet.put(actions, action)
-        {instance, {children, actions, app}}
+        {instance, {children, actions, store}}
       (node, _, acc) ->
         {node, acc}
     end)
-  end
-end
-
-defimpl Rondo.Diffable, for: Rondo.Tree.Placeholder do
-  def diff(%{path: path}, %{path: path}, _path) do
-    []
-  end
-  def diff(current, _prev, path) do
-    [Rondo.Operation.replace(path, current)]
-  end
-end
-
-defimpl Inspect, for: Rondo.Tree.Placeholder do
-  import Inspect.Algebra
-
-  def inspect(%{path: path}, opts) do
-    concat([
-      "#Rondo.Tree.Placeholder<",
-      "path=",
-      to_doc(path, opts),
-      ">"
-    ])
   end
 end

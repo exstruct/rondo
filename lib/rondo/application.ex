@@ -3,60 +3,77 @@ defmodule Rondo.Application do
   @render __MODULE__.RENDER
 
   defstruct [phase: @init,
-             manager: nil,
              components: %{},
              entry: nil,
-             actions: %Rondo.Action.Manager{}]
+             action_store: %Rondo.Action.Store{}]
 
   def init(entry) do
     %__MODULE__{entry: entry}
   end
 
-  def render(prev = %{entry: entry, actions: actions}, manager, context \\ %{}) do
-    actions = Rondo.Action.Manager.init(actions)
-    current = %{prev | components: %{}, actions: actions, phase: @render, manager: manager}
+  def render(app = %{entry: entry, action_store: action_store}, state_store, context \\ %{}) do
     path = Rondo.Path.create_root()
-    app = Rondo.Component.mount(path, entry, context, current, prev)
+    current = %{}
+    prev = app.components
+    action_store = Rondo.Action.Store.init(action_store)
 
-    {%{app | actions: Rondo.Action.Manager.finalize(app.actions), manager: nil}, app.manager}
+    {components, state_store, action_store} =
+      render_component(path, entry, context, current, prev, state_store, action_store)
+
+    action_store = Rondo.Action.Store.finalize(action_store)
+    app = %{app | components: components, action_store: action_store, phase: @render}
+    {app, state_store}
   end
 
-  def diff(%{components: curr_components, actions: curr_affordances, phase: @render},
-           %{components: prev_components, actions: prev_affordances}) do
-    curr = %{"components" => curr_components, "affordances" => curr_affordances}
-    prev = %{"components" => prev_components, "affordances" => prev_affordances}
-    Rondo.Diff.diff(curr, prev)
+  defp render_component(path, element, context, current, prev, state_store, action_store) do
+    component = create_component(prev, path, element)
+
+    {component, state_store, action_store} =
+      Rondo.Component.mount(component, path, context, state_store, action_store)
+
+    current = put_component(current, path, component)
+
+    %{tree: %{children: children}, child_context: child_context} = component
+    child_context = Map.merge(context, child_context)
+    acc = {current, state_store, action_store}
+
+    children
+    |> Enum.reduce(acc, fn({path, element}, {current, state, action}) ->
+      render_component(path, element, child_context, current, prev, state, action)
+    end)
   end
 
-  def prepare_action(app = %{components: components, actions: actions, phase: @render}, action_ref, data) do
-    case Rondo.Action.Manager.prepare_update(actions, action_ref, data) do
-      {:invalid, errors, actions} ->
-        {:invalid, errors, %{app | actions: actions}}
-      {:ok, component_path, state_path, update_fn, actions} ->
-        ## TODO lookup state descriptor for state_path in component
-        descriptor = nil
-        {:ok, component_path, state_path, descriptor, update_fn, %{app | actions: actions}}
+  defp create_component(components, path, element) do
+    case Map.fetch(components, path) do
+      {:ok, component = %{element: ^element}} ->
+        component
+      _ ->
+        %Rondo.Component{element: element}
     end
   end
 
-  def __fetch_component__(%{components: components}, path) do
-    Map.fetch(components, path)
-  end
-
-  def __put_component__(app = %{components: components}, path, component) do
+  defp put_component(components, path, component) do
     if Map.has_key?(components, path) do
       throw :cannot_update_mounted_component
     end
-    %{app | components: Map.put(components, path, component)}
+    Map.put(components, path, component)
   end
 
-  def __mount_state__(app = %{manager: manager}, component_path, state_path, descriptor) do
-    {store, manager} = Rondo.Manager.mount(manager, component_path, state_path, descriptor)
-    {store, %{app | manager: manager}}
+  def diff(%{components: curr_components, action_store: curr_affordances, phase: @render},
+           %{components: prev_components, action_store: prev_affordances}) do
+    curr = %{"components" => curr_components, "schemas" => curr_affordances}
+    prev = %{"components" => prev_components, "schemas" => prev_affordances}
+    Rondo.Diff.diff(curr, prev)
   end
 
-  def __put_action__(app = %{actions: actions}, component_path, descriptor) do
-    {affordance, actions} = Rondo.Action.Manager.put(actions, component_path, descriptor)
-    {affordance, %{app | actions: actions}}
+  def prepare_action(app = %{action_store: actions, phase: @render}, action_ref, data) do
+    case Rondo.Action.Store.prepare_update(actions, action_ref, data) do
+      {:invalid, errors, action_store} ->
+        app = %{app | action_store: action_store}
+        {:invalid, errors, app}
+      {:ok, component_path, state_path, descriptor, update_fn, action_store} ->
+        app = %{app | action_store: action_store}
+        {:ok, component_path, state_path, descriptor, update_fn, app}
+    end
   end
 end

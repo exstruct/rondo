@@ -2,7 +2,6 @@ defmodule Rondo.Component do
   defmacro __using__(_) do
     quote do
       use Rondo.Action
-      import Rondo.Auth, only: [auth: 1, auth: 2]
       use Rondo.Element
       use Rondo.Store
     end
@@ -13,58 +12,60 @@ defmodule Rondo.Component do
              :tree,
              :child_context]
 
-  alias Rondo.Application
-  alias Rondo.Element
   alias Rondo.State
   alias Rondo.Tree
 
-  def mount(path, element, context, current, prev) do
-    component = create_component(path, element, prev)
-    {component, current} = init_state(path, component, context, current)
-    current = Application.__put_component__(current, path, component)
-
-    %{tree: %{children: children}, child_context: child_context} = component
-    child_context = Map.merge(context, child_context)
-
-    Enum.reduce(children, current, fn({child_path, child_element}, current) ->
-      mount(child_path, child_element, child_context, current, prev)
-    end)
+  def mount(component, path, context, state_store, action_store) do
+    init_state(component, path, context, state_store, action_store)
   end
 
-  def unmount(_component, current) do
-    # TODO
-    current
-  end
-
-  defp create_component(path, element, prev) do
-    case Application.__fetch_component__(prev, path) do
-      {:ok, component = %{element: ^element}} ->
-        component
-      _ ->
-        %__MODULE__{element: element}
-    end
-  end
-
-  defp init_state(path, component = %{element: element, state: state}, context, current) do
-    state_descriptor = Element.state(element, context)
-    case State.init(state, state_descriptor, path, current) do
-      {^state, current} ->
-        {component, current}
-      {state, current} ->
+  defp init_state(component = %{element: element, state: state}, path, context, state_store, action_store) do
+    state_descriptor = state(element, context)
+    case State.init(state, state_descriptor, path, state_store) do
+      {^state, state_store} ->
+        {component, state_store, action_store}
+      {state, state_store} ->
         %{component | state: state}
-        |> render(path, current)
+        |> render(path, state_store, action_store)
     end
   end
 
-  defp render(component = %{element: element, state: %{root: state}, tree: tree}, path, current) do
-    child_context = Element.context(element, state)
-    tree_descriptor = Element.render(element, state)
-    case Tree.init(tree, tree_descriptor, path, current) do
-      {^tree, current} ->
-        {%{component | child_context: child_context}, current}
-      {tree, current} ->
-        {%{component | child_context: child_context, tree: tree}, current}
+  defp render(component = %{element: element, state: state, tree: tree}, path, state_store, action_store) do
+    child_context = context(element, state.root)
+    tree_descriptor = render(element, state.root)
+    case Tree.init(tree, tree_descriptor, path, state, action_store) do
+      {^tree, action_store} ->
+        component = %{component | child_context: child_context}
+        {component, state_store, action_store}
+      {tree, action_store} ->
+        component = %{component | child_context: child_context, tree: tree}
+        {component, state_store, action_store}
     end
+  end
+
+  defp state(element = %{props: props, children: children}, context) do
+    props = Map.put(props, :children, children)
+    call(element, :state, [props, context], props)
+  end
+
+  defp context(element, state) do
+    call(element, :context, [state], %{})
+  end
+
+  defp render(element, state) do
+    call(element, :render, [state], nil)
+  end
+
+  defp call(%{type: type}, fun, args, default) when is_atom(type) do
+    case function_exported?(type, fun, length(args)) do
+      true ->
+        apply(type, fun, args)
+      false ->
+        default
+    end
+  end
+  defp call(_, _, _, default) do
+    default
   end
 end
 

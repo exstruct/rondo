@@ -9,7 +9,7 @@ defmodule Test.Rondo do
         %__MODULE__{message: message}
       end
 
-      defimpl Rondo.Manager do
+      defimpl Rondo.State.Store do
         def mount(%{message: message} = manager, c_path, id, descriptor) do
           {message, manager}
         end
@@ -46,9 +46,16 @@ defmodule Test.Rondo do
     defmodule NextLevel do
       use Rondo.Component
 
+      def state(props, _) do
+        %{
+          my_state: create_store(),
+          text: props.text
+        }
+      end
+
       def render(%{text: text}) do
         el("Text", %{
-              on_click: action(Click, ["my_state"], %{}),
+              on_click: action(Click, [:my_state], %{}),
               foo: if is_binary(text) do
                 123
               end
@@ -102,15 +109,17 @@ defmodule Test.Rondo do
 
       {diff1, app1, manager} = render_and_diff(app, manager)
 
-      manager = Rondo.Manager.handle_info(manager, "Hello")
+      manager = Rondo.State.Store.handle_info(manager, "Hello")
 
       {diff2, app2, manager} = render_and_diff(app1, manager)
 
-      {:ok, app3, manager} = submit_action(app2, manager, 76912922, %{"x" => 123})
+      action_ref = 8970905 # TODO don't hardcode this
+
+      {:ok, app3, manager} = submit_action(app2, manager, action_ref, %{"x" => 123})
 
       {diff3, app3, manager} = render_and_diff(app3, manager)
 
-      {:invalid, errors, app4, manager} = submit_action(app3, manager, 76912922, %{"x" => "foo"})
+      {:invalid, errors, app4, manager} = submit_action(app3, manager, action_ref, %{"x" => "foo"})
 
       IO.puts "!!!! ERRORS !!!!"
       IO.inspect errors
@@ -132,7 +141,7 @@ defmodule Test.Rondo do
       {:invalid, errors, app} ->
         {:invalid, errors, app, manager}
       {:ok, component_path, state_path, descriptor, update_fn, app} ->
-        case Rondo.Manager.handle_action(manager, component_path, state_path, descriptor, update_fn) do
+        case Rondo.State.Store.handle_action(manager, component_path, state_path, descriptor, update_fn) do
           {:ok, manager} ->
             {:ok, app, manager}
           {:error, error, manager} ->

@@ -9,32 +9,8 @@ defmodule Rondo.Element do
 
   def el(type, props \\ %{}, children \\ []) when is_map(props) or is_nil(props) do
     props = props || %{}
-    %__MODULE__{key: Map.get(props, :key, nil), type: type, props: props, children: children}
-  end
-
-  def state(element = %{props: props, children: children}, context) do
-    props = Map.put(props, :children, children)
-    call(element, :state, [props, context], props)
-  end
-
-  def context(element, state) do
-    call(element, :context, [state], %{})
-  end
-
-  def render(element, state) do
-    call(element, :render, [state], nil)
-  end
-
-  defp call(%{type: type}, fun, args, default) when is_atom(type) do
-    case function_exported?(type, fun, length(args)) do
-      true ->
-        apply(type, fun, args)
-      false ->
-        default
-    end
-  end
-  defp call(_, _, _, default) do
-    default
+    key = Map.get(props, :key, nil)
+    %__MODULE__{key: key, type: type, props: props, children: children}
   end
 end
 
@@ -78,22 +54,10 @@ end
 
 defimpl Rondo.Traverser, for: Rondo.Element do
   def traverse(node, path, acc, prewalk, postwalk) do
-    {node, path} = replace_path(node, path)
-
     {node = %{props: props, children: children}, acc} = prewalk.(node, path, acc)
     {props, acc} = Rondo.Traverser.traverse(props, path, acc, prewalk, postwalk)
     {children, acc} = Rondo.Traverser.traverse(children, path, acc, prewalk, postwalk)
     postwalk.(%{node | props: props, children: children}, path, acc)
-  end
-
-  defp replace_path(node = %{key: key}, [_ | path]) when not is_nil(key) do
-    {node, [key | path]}
-  end
-  defp replace_path(node, [key | _] = path) do
-    {%{node | key: key}, path}
-  end
-  defp replace_path(node, []) do
-    {node, []}
   end
 end
 
