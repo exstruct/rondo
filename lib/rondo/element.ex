@@ -66,8 +66,9 @@ defimpl Rondo.Diffable, for: Rondo.Element do
   defp children_to_map(children) do
     children
     |> Enum.reduce({%{}, 0}, fn
-      (el = %Rondo.Element{key: key}, {map, idx}) when not is_nil(key) ->
-        {Map.put(map, key, el), idx}
+      #TODO how do we represent ordering with a map?
+      #(el = %Rondo.Element{key: key}, {map, idx}) when not is_nil(key) ->
+      #  {Map.put(map, key, el), idx}
       (other, {map, idx}) ->
         {Map.put(map, idx, other), idx + 1}
     end)
