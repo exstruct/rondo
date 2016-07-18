@@ -26,7 +26,8 @@ defmodule Rondo.Mixfile do
   end
 
   defp deps do
-    [{:excheck, "~> 0.4.1", only: [:dev, :test, :bench]},
+    [{:ex_json_schema, "~> 0.4.1", optional: true},
+     {:excheck, "~> 0.4.1", only: [:dev, :test, :bench]},
      {:triq, github: "krestenkrab/triq", only: [:dev, :test, :bench]},
      {:benchfella, "~> 0.3.1", only: [:dev, :test, :bench]},
      {:mix_test_watch, "~> 0.2", only: :dev},

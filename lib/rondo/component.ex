@@ -68,7 +68,7 @@ defmodule Rondo.Component do
   end
 end
 
-defimpl Rondo.Diff, for: Rondo.Component do
+defimpl Rondo.Diffable, for: Rondo.Component do
   def diff(%{element: %{type: type}, tree: %{root: current}},
            %{element: %{type: type}, tree: %{root: prev}}, path) do
     Rondo.Diff.diff(current, prev, path)

@@ -17,6 +17,10 @@ defmodule Test.Rondo do
         def handle_info(manager, message) do
           %{manager | message: message}
         end
+
+        def handle_action(manager, component_path, state_path, descriptor, update_fn) do
+          {:ok, %{manager | message: update_fn.(%{})}}
+        end
       end
     end
 
@@ -25,17 +29,17 @@ defmodule Test.Rondo do
 
       def affordance(_props) do
         %{
-          type: "object",
-          properties: %{
-            x: %{
-              type: "number"
+          "type" => "object",
+          "properties" => %{
+            "x" => %{
+              "type" => "number"
             }
           }
         }
       end
 
       def action(_props, state, %{"x" => x}) do
-        put_in(state, ["x"], x)
+        x
       end
     end
 
@@ -100,7 +104,16 @@ defmodule Test.Rondo do
 
       manager = Rondo.Manager.handle_info(manager, "Hello")
 
-      {diff2, app2, maanger} = render_and_diff(app1, manager)
+      {diff2, app2, manager} = render_and_diff(app1, manager)
+
+      {:ok, app3, manager} = submit_action(app2, manager, 76912922, %{"x" => 123})
+
+      {diff3, app3, manager} = render_and_diff(app3, manager)
+
+      {:invalid, errors, app4, manager} = submit_action(app3, manager, 76912922, %{"x" => "foo"})
+
+      IO.puts "!!!! ERRORS !!!!"
+      IO.inspect errors
   end
 
   defp render_and_diff(initial, manager) do
@@ -112,5 +125,19 @@ defmodule Test.Rondo do
     IO.inspect diff
     IO.puts "\n"
     {diff, rendered, manager}
+  end
+
+  defp submit_action(app, manager, ref, data) do
+    case Rondo.Application.prepare_action(app, ref, data) do
+      {:invalid, errors, app} ->
+        {:invalid, errors, app, manager}
+      {:ok, component_path, state_path, descriptor, update_fn, app} ->
+        case Rondo.Manager.handle_action(manager, component_path, state_path, descriptor, update_fn) do
+          {:ok, manager} ->
+            {:ok, app, manager}
+          {:error, error, manager} ->
+            {:error, error, app, manager}
+        end
+    end
   end
 end

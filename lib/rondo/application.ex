@@ -28,8 +28,15 @@ defmodule Rondo.Application do
     Rondo.Diff.diff(curr, prev)
   end
 
-  def handle_action(app = %{phase: @render}, _action_ref, _message) do
-    app
+  def prepare_action(app = %{components: components, actions: actions, phase: @render}, action_ref, data) do
+    case Rondo.Action.Manager.prepare_update(actions, action_ref, data) do
+      {:invalid, errors, actions} ->
+        {:invalid, errors, %{app | actions: actions}}
+      {:ok, component_path, state_path, update_fn, actions} ->
+        ## TODO lookup state descriptor for state_path in component
+        descriptor = nil
+        {:ok, component_path, state_path, descriptor, update_fn, %{app | actions: actions}}
+    end
   end
 
   def __fetch_component__(%{components: components}, path) do

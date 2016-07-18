@@ -42,7 +42,7 @@ defmodule Rondo.Tree do
   end
 end
 
-defimpl Rondo.Diff, for: Rondo.Tree.Placeholder do
+defimpl Rondo.Diffable, for: Rondo.Tree.Placeholder do
   def diff(%{path: path}, %{path: path}, _path) do
     []
   end

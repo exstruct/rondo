@@ -38,7 +38,7 @@ defmodule Rondo.Element do
   end
 end
 
-defimpl Rondo.Diff, for: Rondo.Element do
+defimpl Rondo.Diffable, for: Rondo.Element do
   def diff(current, current, _path) do
     []
   end
