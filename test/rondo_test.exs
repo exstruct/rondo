@@ -117,7 +117,7 @@ defmodule Test.Rondo do
     end
   after
     "foo" ->
-      store = Manager.init(:rand.uniform())
+      store = Manager.init(random())
       element = el(Quiz)
 
       app = Rondo.create_application(element)
@@ -149,5 +149,13 @@ defmodule Test.Rondo do
     IO.inspect diff
     IO.puts "\n"
     {diff, rendered, store}
+  end
+
+  try do
+    :rand.uniform()
+    def random, do: :rand.uniform()
+  catch
+    _, _ ->
+      def random, do: :random.uniform()
   end
 end

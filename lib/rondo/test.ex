@@ -26,7 +26,7 @@ defmodule Rondo.Test do
     action_store = Rondo.Action.Store.finalize(action_store)
 
     app = %{app | phase: Rondo.Application.RENDER,
-                  components: %{path => component},
+                  components: Map.put(%{}, path, component),
                   action_store: action_store}
 
     {app, state_store}
