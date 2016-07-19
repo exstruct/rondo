@@ -38,7 +38,8 @@ defmodule Rondo.Action.Store do
             update_fn = fn(state) ->
               call(handler, :action, [props, state, data])
             end
-           {:ok, [{state_descriptor, update_fn} | events], store}
+            events = Enum.map(events, &(&1.(data)))
+            {:ok, [{state_descriptor, update_fn} | events], store}
         end
     end
   end
@@ -67,9 +68,11 @@ defmodule Rondo.Action.Store do
   end
 
   defp init_events(%{reference: descriptor, handler: handler, props: props}) do
-    {descriptor, fn(state) ->
-      call(handler, :event, [props, state])
-    end}
+    fn(data) ->
+      {descriptor, fn(state) ->
+        call(handler, :event, [props, state, data])
+      end}
+    end
   end
 
   defp init_validator(store = %{validators: validators, affordances: affordances}, schema_ref) do

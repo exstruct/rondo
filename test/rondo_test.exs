@@ -46,7 +46,7 @@ defmodule Test.Rondo do
     defmodule CounterLogger do
       use Rondo.Event
 
-      def event(props, state) do
+      def event(props, state, _input) do
         IO.inspect {:LOGGER, props, state}
         state
       end
