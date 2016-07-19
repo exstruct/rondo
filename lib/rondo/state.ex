@@ -57,7 +57,7 @@ defmodule Rondo.State do
     end)
   end
 
-  defp insert(%{partial: partial, children: children} = state, component_path, cache, store) do
+  defp insert(%{partial: partial} = state, component_path, cache, store) do
     {root, _} = Rondo.Traverser.postwalk(partial, [], nil, fn
       (%Rondo.Store.Reference{} = ref, _, acc) ->
         case Rondo.Store.Reference.resolve(ref, cache, :value) do

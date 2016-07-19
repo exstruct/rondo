@@ -106,49 +106,37 @@ defmodule Test.Rondo do
     end
   after
     "foo" ->
-      manager = Manager.init(:rand.uniform())
-      app = Rondo.create_application(el(Quiz))
+      store = Manager.init(:rand.uniform())
+      element = el(Quiz)
 
-      {diff1, app1, manager} = render_and_diff(app, manager)
+      app = Rondo.create_application(element)
 
-      manager = Rondo.State.Store.handle_info(manager, "Hello")
+      {diff1, app1, store} = render_and_diff(app, store)
 
-      {diff2, app2, manager} = render_and_diff(app1, manager)
+      store = Rondo.State.Store.handle_info(store, "Hello")
+
+      {diff2, app2, store} = render_and_diff(app1, store)
 
       action_ref = 11238785 # TODO don't hardcode this
 
-      {:ok, app3, manager} = submit_action(app2, manager, action_ref, %{"x" => 123})
+      {:ok, _tree, app3, store} = Rondo.Test.submit_action(app2, store, action_ref, %{"x" => 123})
 
-      {diff3, app3, manager} = render_and_diff(app3, manager)
+      {diff3, app3, store} = render_and_diff(app3, store)
 
-      {:invalid, errors, app4, manager} = submit_action(app3, manager, action_ref, %{"x" => "foo"})
+      {:invalid, errors, app4, store} = Rondo.Test.submit_action(app3, store, action_ref, %{"x" => "foo"})
 
       IO.puts "!!!! ERRORS !!!!"
       IO.inspect errors
   end
 
-  defp render_and_diff(initial, manager) do
+  defp render_and_diff(initial, store) do
     IO.puts "====== RENDERING ======"
-    {rendered, manager} = Rondo.Application.render(initial, manager)
+    {rendered, store} = Rondo.Application.render(initial, store)
     IO.inspect rendered.components
     diff = Rondo.Application.diff(rendered, initial) |> Enum.to_list
     IO.puts "-------  DIFF  --------"
     IO.inspect diff
     IO.puts "\n"
-    {diff, rendered, manager}
-  end
-
-  defp submit_action(app, manager, ref, data) do
-    case Rondo.Application.prepare_action(app, ref, data) do
-      {:invalid, errors, app} ->
-        {:invalid, errors, app, manager}
-      {:ok, descriptor, update_fn, app} ->
-        case Rondo.State.Store.handle_action(manager, descriptor, update_fn) do
-          {:ok, manager} ->
-            {:ok, app, manager}
-          {:error, error, manager} ->
-            {:error, error, app, manager}
-        end
-    end
+    {diff, rendered, store}
   end
 end
