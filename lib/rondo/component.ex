@@ -4,6 +4,20 @@ defmodule Rondo.Component do
       use Rondo.Action
       use Rondo.Element
       use Rondo.Store
+
+      def state(props, _) do
+        props
+      end
+
+      def context(_) do
+        %{}
+      end
+
+      def render(_) do
+        nil
+      end
+
+      defoverridable [state: 2, context: 1, render: 1]
     end
   end
 
@@ -55,13 +69,8 @@ defmodule Rondo.Component do
     call(element, :render, [state], nil)
   end
 
-  defp call(%{type: type}, fun, args, default) when is_atom(type) do
-    case function_exported?(type, fun, length(args)) do
-      true ->
-        apply(type, fun, args)
-      false ->
-        default
-    end
+  defp call(%{type: type}, fun, args, _) when is_atom(type) do
+    apply(type, fun, args)
   end
   defp call(_, _, _, default) do
     default
