@@ -84,29 +84,12 @@ defmodule Rondo.Test do
   end
 
   def submit_action(app, store, ref, data) do
-    case Rondo.Application.prepare_action(app, ref, data) do
-      {:invalid, errors, app} ->
-        {:invalid, errors, app, store}
-      {:ok, descriptors, app} ->
-        case apply_descriptors(descriptors, store) do
-          {:ok, store} ->
-            {app, store} = Rondo.Application.render(app, store)
-            {:ok, app, store}
-          {:error, error, store} ->
-            {:error, error, app, store}
-        end
-    end
-  end
-
-  defp apply_descriptors([], store) do
-    {:ok, store}
-  end
-  defp apply_descriptors([{descriptor, update_fn} | descriptors], store) do
-    case Rondo.State.Store.handle_action(store, descriptor, update_fn) do
-      {:ok, store} ->
-        apply_descriptors(descriptors, store)
-      {:error, error, store} ->
-        {:error, error, store}
+    case Rondo.submit_action(app, store, ref, data) do
+      {:ok, app, store} ->
+        {app, store} = Rondo.Application.render(app, store)
+        {:ok, app, store}
+      error ->
+        error
     end
   end
 
