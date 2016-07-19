@@ -26,6 +26,7 @@ defmodule Rondo.Action.Store do
       :error ->
         {:invalid, [], store}
       {:ok, %{schema_ref: schema_ref,
+              events: events,
               action: %{handler: handler,
                         props: props,
                         reference: state_descriptor}}} ->
@@ -37,7 +38,7 @@ defmodule Rondo.Action.Store do
             update_fn = fn(state) ->
               call(handler, :action, [props, state, data])
             end
-           {:ok, state_descriptor, update_fn, store}
+           {:ok, [{state_descriptor, update_fn} | events], store}
         end
     end
   end
@@ -58,10 +59,17 @@ defmodule Rondo.Action.Store do
   defp create_ref(actions, action, schema_ref) do
     ref = hash(action)
     actions = Map.put(actions, ref, %{
+      events: Enum.map(action.events, &init_events/1),
       action: action,
       schema_ref: schema_ref
     })
     {ref, actions}
+  end
+
+  defp init_events(%{reference: descriptor, handler: handler, props: props}) do
+    {descriptor, fn(state) ->
+      call(handler, :event, [props, state])
+    end}
   end
 
   defp init_validator(store = %{validators: validators, affordances: affordances}, schema_ref) do

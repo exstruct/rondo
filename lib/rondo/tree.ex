@@ -30,12 +30,8 @@ defmodule Rondo.Tree do
         children = Map.put(children, path, el)
         {%Pointer{path: path}, {children, actions, store}}
       (%Reference{} = ref, _path, acc) ->
-        case Reference.resolve(ref, state.children) do
-          {:ok, ref} ->
-            {ref, acc}
-          :error ->
-            raise Reference.Error, reference: ref, component_path: component_path
-        end
+        ref = resolve(ref, state.children, component_path)
+        {ref, acc}
       (%Rondo.Action{reference: nil}, _path, acc) ->
         {nil, acc}
       (%Rondo.Action{} = action, _path, {children, actions, store}) ->
@@ -47,18 +43,42 @@ defmodule Rondo.Tree do
     end)
   end
 
-  defp put_action(action = %{reference: %Reference{} = reference}, component_path, store, state) do
-    case Reference.resolve(reference, state.children) do
+  defp put_action(action = %{reference: reference, events: events}, component_path, store, %{children: children}) do
+    case resolve(reference, children, component_path) do
+      nil ->
+        {nil, store}
+      descriptor ->
+        events = resolve_events(events, component_path, children, [])
+        action = %{action | reference: descriptor,
+                            events: events}
+        Rondo.Action.Store.put(store, action)
+    end
+  end
+
+  defp resolve_events([], _, _, acc) do
+    :lists.reverse(acc)
+  end
+  defp resolve_events([event = %{reference: ref} | events], component_path, children, acc) do
+    case resolve(ref, children, component_path) do
+      nil ->
+        resolve_events(events, component_path, children, acc)
+      descriptor ->
+        event = %{event | reference: descriptor}
+        resolve_events(events, component_path, children, [event | acc])
+    end
+  end
+
+  defp resolve(%Reference{} = reference, children, component_path) do
+    case Reference.resolve(reference, children) do
       :error ->
         raise Reference.Error, reference: reference, component_path: component_path
       {:ok, nil} ->
-        {nil, store}
+        nil
       {:ok, descriptor} ->
-        %{action | reference: descriptor}
-        |> put_action(component_path, store, state)
+        descriptor
     end
   end
-  defp put_action(action, _, store, _state) do
-    Rondo.Action.Store.put(store, action)
+  defp resolve(%Rondo.Store{} = store, _, _) do
+    store
   end
 end

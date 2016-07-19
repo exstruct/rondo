@@ -71,9 +71,9 @@ defmodule Rondo.Application do
       {:invalid, errors, action_store} ->
         app = %{app | action_store: action_store}
         {:invalid, errors, app}
-      {:ok, descriptor, update_fn, action_store} ->
+      {:ok, descriptors, action_store} ->
         app = %{app | action_store: action_store}
-        {:ok, descriptor, update_fn, app}
+        {:ok, descriptors, app}
     end
   end
 end

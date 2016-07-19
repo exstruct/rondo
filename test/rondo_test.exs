@@ -43,6 +43,15 @@ defmodule Test.Rondo do
       end
     end
 
+    defmodule CounterLogger do
+      use Rondo.Event
+
+      def event(props, state) do
+        IO.inspect {:LOGGER, props, state}
+        state
+      end
+    end
+
     defmodule NextLevel do
       use Rondo.Component
 
@@ -56,7 +65,9 @@ defmodule Test.Rondo do
 
       def render(%{text: text}) do
         el("Text", %{
-          on_click: ref([:counter]) |> action(Click, %{path: Foo}),
+          on_click: ref([:counter])
+            |> action(Click, %{path: Foo})
+            |> event(ref([:counter]), CounterLogger),
           foo: if is_binary(text) do
             123
           end
@@ -117,7 +128,7 @@ defmodule Test.Rondo do
 
       {diff2, app2, store} = render_and_diff(app1, store)
 
-      action_ref = 11238785 # TODO don't hardcode this
+      {:ok, %{props: %{on_click: %{ref: action_ref}}}} = Rondo.Test.fetch_path(app2, [0])
 
       {:ok, _, store} = Rondo.Test.submit_action(app2, store, action_ref, %{"x" => 123})
 

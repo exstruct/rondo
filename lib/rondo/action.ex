@@ -1,5 +1,8 @@
 defmodule Rondo.Action do
-  defstruct [:reference, :handler, :props]
+  defstruct [events: [],
+             reference: nil,
+             handler: nil,
+             props: %{}]
 
   defmacro __using__(_) do
     quote do

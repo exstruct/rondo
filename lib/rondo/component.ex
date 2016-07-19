@@ -3,6 +3,7 @@ defmodule Rondo.Component do
     quote do
       use Rondo.Action
       use Rondo.Element
+      use Rondo.Event
       use Rondo.Store
 
       def state(props, _) do
