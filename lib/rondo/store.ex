@@ -1,9 +1,10 @@
 defmodule Rondo.Store do
-  defstruct [:props, :id, :type]
+  defstruct [:component_path, :state_path, :props, :id, :type]
 
   defmacro __using__(_) do
     quote do
-      import Rondo.Store, only: [create_store: 0, create_store: 1, create_store: 2, create_store: 3]
+      import Rondo.Store
+      import Rondo.Store.Reference
     end
   end
 

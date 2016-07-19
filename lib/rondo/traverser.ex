@@ -19,7 +19,7 @@ end
 defimpl Rondo.Traverser, for: Map do
   def traverse(node, path, acc, prewalk, postwalk) do
     {node, acc} = prewalk.(node, path, acc)
-    {node, acc} = Enum.reduce(node, {%{}, acc}, fn({key, value}, {map, acc}) ->
+    {node, acc} = Enum.reduce(node, {node, acc}, fn({key, value}, {map, acc}) ->
       {value, acc} = Rondo.Traverser.traverse(value, [key | path], acc, prewalk, postwalk)
       {Map.put(map, key, value), acc}
     end)

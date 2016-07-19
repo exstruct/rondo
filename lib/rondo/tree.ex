@@ -8,9 +8,9 @@ defmodule Rondo.Tree do
     tree = %__MODULE__{children: %{}, actions: MapSet.new()}
     init(tree, descriptor, component_path, state, store)
   end
-  def init(tree = %{descriptor: descriptor, actions: actions}, descriptor, component_path, state, store) do
+  def init(tree = %{descriptor: descriptor, actions: actions}, descriptor, _, state, store) do
     store = Enum.reduce(actions, store, fn(action, store) ->
-      {_, store} = Rondo.Action.Store.put(store, component_path, action, state)
+      {_, store} = put_action(action, store, state)
       store
     end)
     {tree, store}
@@ -28,12 +28,36 @@ defmodule Rondo.Tree do
         path = Path.create_child_path(component_path, path)
         children = Map.put(children, path, el)
         {%Pointer{path: path}, {children, actions, store}}
-      (%Rondo.Action{} = action, _path, {children, actions, store}) ->
-        {instance, store} = Rondo.Action.Store.put(store, component_path, action, state)
+      (%Rondo.Store.Reference{} = ref, _path, acc) ->
+        ref = resolve_state_reference(ref, state)
+        {ref, acc}
+      (%Rondo.Action{reference: nil}, _path, acc) ->
+        {nil, acc}
+      (%Rondo.Action{reference: reference} = action, _path, {children, actions, store}) ->
+        {instance, store} = put_action(action, store, state)
         actions = MapSet.put(actions, action)
         {instance, {children, actions, store}}
       (node, _, acc) ->
         {node, acc}
     end)
+  end
+
+  defp put_action(action = %{reference: reference}, store, state) do
+    case resolve_state_reference(reference, state) do
+      nil ->
+        {nil, store}
+      descriptor ->
+        Rondo.Action.Store.put(store, %{action | reference: descriptor})
+    end
+  end
+
+  defp resolve_state_reference(%{state_path: state_path}, %{children: descriptors}) do
+    case Map.fetch(descriptors, state_path) do
+      {:ok, %Rondo.Store{} = store} ->
+        store
+      _ ->
+        ## TODO warn that there's a reference to an immutable/undefined path?
+        nil
+    end
   end
 end

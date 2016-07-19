@@ -10,7 +10,7 @@ defmodule Test.Rondo do
       end
 
       defimpl Rondo.State.Store do
-        def mount(%{message: message} = manager, c_path, id, descriptor) do
+        def mount(%{message: message} = manager, descriptor) do
           {message, manager}
         end
 
@@ -18,7 +18,7 @@ defmodule Test.Rondo do
           %{manager | message: message}
         end
 
-        def handle_action(manager, component_path, state_path, descriptor, update_fn) do
+        def handle_action(manager, descriptor, update_fn) do
           {:ok, %{manager | message: update_fn.(%{})}}
         end
       end
@@ -46,16 +46,18 @@ defmodule Test.Rondo do
     defmodule NextLevel do
       use Rondo.Component
 
-      def state(props, _) do
+      def state(props, context) do
         %{
           my_state: create_store(),
-          text: props.text
+          text: props.text,
+          counter: context[:counter]
         }
       end
 
       def render(%{text: text}) do
+        counter = mut([:counter])
         el("Text", %{
-              on_click: action(Click, [:my_state], %{}),
+              on_click: action(Click, counter, %{path: Foo}),
               foo: if is_binary(text) do
                 123
               end
@@ -70,12 +72,12 @@ defmodule Test.Rondo do
 
       def state(_props, context) do
         %{
-          next: context[:number]
+          counter: context[:counter]
         }
       end
 
-      def render(%{next: next}) do
-        el(NextLevel, %{text: next})
+      def render(%{counter: counter}) do
+        el(NextLevel, %{text: counter})
       end
     end
 
@@ -92,7 +94,7 @@ defmodule Test.Rondo do
 
       def context(state) do
         %{
-          number: state[:local]
+          counter: mut([:local])
         }
       end
 
@@ -113,7 +115,7 @@ defmodule Test.Rondo do
 
       {diff2, app2, manager} = render_and_diff(app1, manager)
 
-      action_ref = 8970905 # TODO don't hardcode this
+      action_ref = 11238785 # TODO don't hardcode this
 
       {:ok, app3, manager} = submit_action(app2, manager, action_ref, %{"x" => 123})
 
@@ -140,8 +142,8 @@ defmodule Test.Rondo do
     case Rondo.Application.prepare_action(app, ref, data) do
       {:invalid, errors, app} ->
         {:invalid, errors, app, manager}
-      {:ok, component_path, state_path, descriptor, update_fn, app} ->
-        case Rondo.State.Store.handle_action(manager, component_path, state_path, descriptor, update_fn) do
+      {:ok, descriptor, update_fn, app} ->
+        case Rondo.State.Store.handle_action(manager, descriptor, update_fn) do
           {:ok, manager} ->
             {:ok, app, manager}
           {:error, error, manager} ->

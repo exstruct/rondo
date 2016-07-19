@@ -10,49 +10,44 @@ defmodule Rondo.Component do
   defstruct [:element,
              :state,
              :tree,
-             :child_context]
+             :context]
 
   alias Rondo.State
   alias Rondo.Tree
 
-  def mount(component, path, context, state_store, action_store) do
-    init_state(component, path, context, state_store, action_store)
-  end
-
-  defp init_state(component = %{element: element, state: state}, path, context, state_store, action_store) do
-    state_descriptor = state(element, context)
+  def mount(component = %{element: element, state: state}, path, context, state_store, action_store) do
+    state_descriptor = get_state(element, context)
     case State.init(state, state_descriptor, path, state_store) do
       {^state, state_store} ->
         {component, state_store, action_store}
       {state, state_store} ->
-        %{component | state: state}
-        |> render(path, state_store, action_store)
-    end
-  end
-
-  defp render(component = %{element: element, state: state, tree: tree}, path, state_store, action_store) do
-    child_context = context(element, state.root)
-    tree_descriptor = render(element, state.root)
-    case Tree.init(tree, tree_descriptor, path, state, action_store) do
-      {^tree, action_store} ->
-        component = %{component | child_context: child_context}
-        {component, state_store, action_store}
-      {tree, action_store} ->
-        component = %{component | child_context: child_context, tree: tree}
+        {context, action_store} = init_context(component, path, action_store, state)
+        {tree, action_store} = init_tree(component, path, action_store, state)
+        component = %{component | state: state, context: context, tree: tree}
         {component, state_store, action_store}
     end
   end
 
-  defp state(element = %{props: props, children: children}, context) do
+  def init_context(%{element: element, context: context}, path, action_store, state) do
+    context_descriptor = get_context(element, state.root)
+    Tree.init(context, context_descriptor, path, state, action_store)
+  end
+
+  defp init_tree(%{element: element, tree: tree}, path, action_store, state) do
+    tree_descriptor = get_tree(element, state.root)
+    Tree.init(tree, tree_descriptor, path, state, action_store)
+  end
+
+  defp get_state(element = %{props: props, children: children}, context) do
     props = Map.put(props, :children, children)
     call(element, :state, [props, context], props)
   end
 
-  defp context(element, state) do
+  defp get_context(element, state) do
     call(element, :context, [state], %{})
   end
 
-  defp render(element, state) do
+  defp get_tree(element, state) do
     call(element, :render, [state], nil)
   end
 
@@ -82,7 +77,7 @@ end
 defimpl Inspect, for: Rondo.Component do
   import Inspect.Algebra
 
-  def inspect(%{element: %{type: type, props: props}, tree: %{root: tree}, state: %{root: state}, child_context: context}, opts) do
+  def inspect(%{element: %{type: type, props: props}, tree: %{root: tree}, state: %{root: state}, context: %{root: context}}, opts) do
     {_, state} = Map.split(state, [:children | Map.keys(props)])
     concat([
       "#Rondo.Component<",

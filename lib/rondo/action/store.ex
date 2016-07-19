@@ -8,18 +8,12 @@ defmodule Rondo.Action.Store do
     %{store | actions: %{}, prev_affordances: affordances}
   end
 
-  def put(store = %{affordances: affordances, actions: actions}, component_path, action, state) do
+  def put(store = %{affordances: affordances, actions: actions}, action) do
     {schema_id, schema, schema_ref, affordances} = create_schema(affordances, action)
-
-    case create_ref(actions, action, component_path, schema_ref, state) do
-      :error ->
-        # TODO should we log a warning that the state path is missing?
-        {store, actions}
-      {ref, actions} ->
-        affordance = %Rondo.Affordance{ref: ref, schema_id: schema_id, schema: schema}
-        store = %{store | actions: actions, affordances: affordances}
-        {affordance, store}
-    end
+    {ref, actions} = create_ref(actions, action, schema_ref)
+    affordance = %Rondo.Affordance{ref: ref, schema_id: schema_id, schema: schema}
+    store = %{store | actions: actions, affordances: affordances}
+    {affordance, store}
   end
 
   def finalize(s = %{affordances: affordances, validators: validators, prev_affordances: prev_affordances}) do
@@ -32,13 +26,9 @@ defmodule Rondo.Action.Store do
       :error ->
         {:invalid, [], store}
       {:ok, %{schema_ref: schema_ref,
-              component_path: component_path,
-              state_descriptor: state_descriptor,
-              descriptor: %{handler: handler,
-                            props: props,
-                            state_path: state_path}}} ->
-        # TODO implement the events
-
+              action: %{handler: handler,
+                        props: props,
+                        reference: state_descriptor}}} ->
         {validator, store} = init_validator(store, schema_ref)
         case validate(validator, data) do
           {:error, errors} ->
@@ -47,7 +37,7 @@ defmodule Rondo.Action.Store do
             update_fn = fn(state) ->
               call(handler, :action, [props, state, data])
             end
-           {:ok, component_path, state_path, state_descriptor, update_fn, store}
+           {:ok, state_descriptor, update_fn, store}
         end
     end
   end
@@ -65,24 +55,13 @@ defmodule Rondo.Action.Store do
     end
   end
 
-  defp create_ref(actions, action, component_path, schema_ref, state) do
-    case fetch_state_descriptor(state, action) do
-      :error ->
-        nil
-      {:ok, state_descriptor} ->
-        ref = hash({component_path, action})
-        actions = Map.put(actions, ref, %{
-          descriptor: action,
-          state_descriptor: state_descriptor,
-          component_path: component_path,
-          schema_ref: schema_ref
-        })
-        {ref, actions}
-    end
-  end
-
-  defp fetch_state_descriptor(%{children: descriptors}, %{state_path: state_path}) do
-    Map.fetch(descriptors, state_path)
+  defp create_ref(actions, action, schema_ref) do
+    ref = hash(action)
+    actions = Map.put(actions, ref, %{
+      action: action,
+      schema_ref: schema_ref
+    })
+    {ref, actions}
   end
 
   defp init_validator(store = %{validators: validators, affordances: affordances}, schema_ref) do

@@ -1,13 +1,17 @@
 defmodule Rondo.Action do
-  defstruct [:state_path, :handler, :props, :events]
+  defstruct [:reference, :handler, :props]
 
   defmacro __using__(_) do
     quote do
-      import unquote(__MODULE__), only: [action: 2, action: 3, action: 4]
+      import unquote(__MODULE__), only: [action: 2, action: 3]
     end
   end
 
-  def action(handler, state_path, props \\ %{}, events \\ []) when is_list(state_path) do
-    %__MODULE__{state_path: state_path, handler: handler, props: props, events: events}
+  def action(handler, reference, props \\ %{})
+  def action(handler, reference = %Rondo.Store.Reference{}, props) do
+    %__MODULE__{reference: reference, handler: handler, props: props}
+  end
+  def action(handler, _, props) do
+    %__MODULE__{handler: handler, props: props}
   end
 end

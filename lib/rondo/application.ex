@@ -33,7 +33,7 @@ defmodule Rondo.Application do
 
     current = put_component(current, path, component)
 
-    %{tree: %{children: children}, child_context: child_context} = component
+    %{tree: %{children: children}, context: %{root: child_context}} = component
     child_context = Map.merge(context, child_context)
     acc = {current, state_store, action_store}
 
@@ -71,9 +71,9 @@ defmodule Rondo.Application do
       {:invalid, errors, action_store} ->
         app = %{app | action_store: action_store}
         {:invalid, errors, app}
-      {:ok, component_path, state_path, descriptor, update_fn, action_store} ->
+      {:ok, descriptor, update_fn, action_store} ->
         app = %{app | action_store: action_store}
-        {:ok, component_path, state_path, descriptor, update_fn, app}
+        {:ok, descriptor, update_fn, app}
     end
   end
 end
