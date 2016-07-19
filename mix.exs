@@ -5,7 +5,7 @@ defmodule Rondo.Mixfile do
     [app: :rondo,
      version: "0.1.0",
      elixir: "~> 1.0",
-     description: "",
+     description: "component rendering library",
      test_coverage: [tool: ExCoveralls],
      preferred_cli_env: [
        "bench": :bench,

@@ -55,9 +55,9 @@ defmodule MyApp.Store do
 end
 ```
 
-Now define an action with an affordance (jsonschema)
+Now define an action with an affordance (in [jsonschema](http://json-schema.org/) format)
 
-```
+```elixir
 defmodule MyApp.Action.Increment do
   def affordance(_props) do
     %{
