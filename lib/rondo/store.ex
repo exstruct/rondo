@@ -9,15 +9,15 @@ defmodule Rondo.Store do
   end
 
   def create_store() do
-    create_store(%{}, nil, :ephemeral)
+    create_store(%{}, :ephemeral, nil)
   end
   def create_store(props) do
-    create_store(props, nil, :ephemeral)
+    create_store(props, :ephemeral, nil)
   end
-  def create_store(props, id) do
-    create_store(props, id, :persistent)
+  def create_store(props, type) do
+    create_store(props, type, nil)
   end
-  def create_store(props, id, type) do
+  def create_store(props, type, id) do
     %__MODULE__{props: props, id: id, type: type}
   end
 end
