@@ -8,10 +8,10 @@ defmodule Rondo.Store.Reference do
   end
 
   defmodule Error do
-    defexception [:reference]
+    defexception [:reference, :component_path, :component_type]
 
-    def message(%{reference: %{state_path: state_path}}) do
-      "Trying to refer to immutable or missing state #{inspect(state_path)}"
+    def message(%{reference: %{state_path: state_path}, component_type: type, component_path: path}) do
+      "Trying to refer to immutable or missing state #{inspect(state_path)} in #{inspect(type)} at #{inspect(path)}"
     end
   end
 

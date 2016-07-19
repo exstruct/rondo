@@ -26,6 +26,10 @@ defmodule Rondo.Component do
         component = %{component | state: state, context: context, tree: tree}
         {component, state_store, action_store}
     end
+  rescue
+    e in Rondo.Store.Reference.Error ->
+      e = %{e | component_type: element.type}
+      reraise e, System.stacktrace
   end
 
   def init_context(%{element: element, context: context}, path, action_store, state) do

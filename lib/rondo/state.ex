@@ -8,21 +8,21 @@ defmodule Rondo.State do
   def init(nil, descriptor, component_path, store) do
     init(%__MODULE__{cache: %{}}, descriptor, component_path, store)
   end
-  def init(%{descriptor: descriptor} = state, descriptor, _component_path, store) do
-    resolve(state, store)
+  def init(%{descriptor: descriptor} = state, descriptor, component_path, store) do
+    resolve(state, component_path, store)
   end
   def init(prev, descriptor, component_path, store) do
     {partial, children} = traverse(descriptor, component_path)
     %{prev | descriptor: descriptor, partial: partial, children: children, root: partial}
-    |> resolve(store)
+    |> resolve(component_path, store)
   end
 
-  defp resolve(%{cache: cache, children: children} = state, store) do
+  defp resolve(%{cache: cache, children: children} = state, component_path, store) do
     case lookup(children, store) do
       {^cache, store} ->
         {state, store}
       {cache, store} ->
-        insert(state, cache, store)
+        insert(state, component_path, cache, store)
     end
   end
 
@@ -57,14 +57,14 @@ defmodule Rondo.State do
     end)
   end
 
-  defp insert(%{partial: partial, children: children} = state, cache, store) do
+  defp insert(%{partial: partial, children: children} = state, component_path, cache, store) do
     {root, _} = Rondo.Traverser.postwalk(partial, [], nil, fn
       (%Rondo.Store.Reference{} = ref, _, acc) ->
         case Rondo.Store.Reference.resolve(ref, cache, :value) do
           {:ok, value} ->
             {value, acc}
           :error ->
-            raise Rondo.Store.Reference.Error, reference: ref
+            raise Rondo.Store.Reference.Error, reference: ref, component_path: component_path
         end
       (%Pointer{path: path}, _, acc) ->
         value = Map.get(cache, path)
