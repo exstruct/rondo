@@ -3,6 +3,7 @@ defmodule Rondo.Tree do
 
   alias Rondo.Path
   alias Rondo.Component.Pointer
+  alias Rondo.Store.Reference
 
   def init(nil, descriptor, component_path, state, store) do
     tree = %__MODULE__{children: %{}, actions: MapSet.new()}
@@ -28,12 +29,16 @@ defmodule Rondo.Tree do
         path = Path.create_child_path(component_path, path)
         children = Map.put(children, path, el)
         {%Pointer{path: path}, {children, actions, store}}
-      (%Rondo.Store.Reference{} = ref, _path, acc) ->
-        ref = resolve_state_reference(ref, state)
-        {ref, acc}
+      (%Reference{} = ref, _path, acc) ->
+        case Reference.resolve(ref, state.children) do
+          {:ok, ref} ->
+            {ref, acc}
+          :error ->
+            raise Reference.Error, reference: ref
+        end
       (%Rondo.Action{reference: nil}, _path, acc) ->
         {nil, acc}
-      (%Rondo.Action{reference: reference} = action, _path, {children, actions, store}) ->
+      (%Rondo.Action{} = action, _path, {children, actions, store}) ->
         {instance, store} = put_action(action, store, state)
         actions = MapSet.put(actions, action)
         {instance, {children, actions, store}}
@@ -42,22 +47,18 @@ defmodule Rondo.Tree do
     end)
   end
 
-  defp put_action(action = %{reference: reference}, store, state) do
-    case resolve_state_reference(reference, state) do
-      nil ->
+  defp put_action(action = %{reference: %Reference{} = reference}, store, state) do
+    case Reference.resolve(reference, state.children) do
+      :error ->
+        raise Reference.Error, reference: reference
+      {:ok, nil} ->
         {nil, store}
-      descriptor ->
-        Rondo.Action.Store.put(store, %{action | reference: descriptor})
+      {:ok, descriptor} ->
+        %{action | reference: descriptor}
+        |> put_action(store, state)
     end
   end
-
-  defp resolve_state_reference(%{state_path: state_path}, %{children: descriptors}) do
-    case Map.fetch(descriptors, state_path) do
-      {:ok, %Rondo.Store{} = store} ->
-        store
-      _ ->
-        ## TODO warn that there's a reference to an immutable/undefined path?
-        nil
-    end
+  defp put_action(action, store, _state) do
+    Rondo.Action.Store.put(store, action)
   end
 end

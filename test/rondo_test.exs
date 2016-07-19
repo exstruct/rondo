@@ -55,15 +55,14 @@ defmodule Test.Rondo do
       end
 
       def render(%{text: text}) do
-        counter = mut([:counter])
         el("Text", %{
-              on_click: action(Click, counter, %{path: Foo}),
-              foo: if is_binary(text) do
-                123
-              end
-           }, [
-              text
-            ])
+          on_click: ref([:counter]) |> action(Click, %{path: Foo}),
+          foo: if is_binary(text) do
+            123
+          end
+        }, [
+          text
+        ])
       end
     end
 
@@ -88,13 +87,14 @@ defmodule Test.Rondo do
         %{
           root: create_store(%{}, Quiz123),
           local: create_store(%{}),
-          children: children
+          children: children,
+          foo: ref([:local])
         }
       end
 
       def context(state) do
         %{
-          counter: mut([:local])
+          counter: ref([:foo])
         }
       end
 

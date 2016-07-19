@@ -4,7 +4,7 @@ defmodule Rondo.Store do
   defmacro __using__(_) do
     quote do
       import Rondo.Store
-      import Rondo.Store.Reference
+      use Rondo.Store.Reference
     end
   end
 

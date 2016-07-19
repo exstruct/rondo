@@ -7,11 +7,11 @@ defmodule Rondo.Action do
     end
   end
 
-  def action(handler, reference, props \\ %{})
-  def action(handler, reference = %Rondo.Store.Reference{}, props) do
+  def action(reference, handler, props \\ %{})
+  def action(reference = %Rondo.Store.Reference{}, handler, props) do
     %__MODULE__{reference: reference, handler: handler, props: props}
   end
-  def action(handler, _, props) do
+  def action(nil, handler, props) do
     %__MODULE__{handler: handler, props: props}
   end
 end

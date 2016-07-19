@@ -38,6 +38,9 @@ defmodule Rondo.State do
       (%Rondo.Store{} = store, path, acc) ->
         acc = Map.put(acc, path, store)
         {%Pointer{path: path}, acc}
+      (%Rondo.Store.Reference{} = ref, path, acc) ->
+        acc = Map.put(acc, path, ref)
+        {ref, acc}
       (node, _, acc) ->
         {node, acc}
     end)
@@ -54,8 +57,15 @@ defmodule Rondo.State do
     end)
   end
 
-  defp insert(%{partial: partial} = state, cache, store) do
+  defp insert(%{partial: partial, children: children} = state, cache, store) do
     {root, _} = Rondo.Traverser.postwalk(partial, [], nil, fn
+      (%Rondo.Store.Reference{} = ref, _, acc) ->
+        case Rondo.Store.Reference.resolve(ref, cache, :value) do
+          {:ok, value} ->
+            {value, acc}
+          :error ->
+            raise Rondo.Store.Reference.Error, reference: ref
+        end
       (%Pointer{path: path}, _, acc) ->
         value = Map.get(cache, path)
         {value, acc}
