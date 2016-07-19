@@ -119,9 +119,9 @@ defmodule Test.Rondo do
 
       action_ref = 11238785 # TODO don't hardcode this
 
-      {:ok, _tree, app3, store} = Rondo.Test.submit_action(app2, store, action_ref, %{"x" => 123})
+      {:ok, _, store} = Rondo.Test.submit_action(app2, store, action_ref, %{"x" => 123})
 
-      {diff3, app3, store} = render_and_diff(app3, store)
+      {diff3, app3, store} = render_and_diff(app2, store)
 
       {:invalid, errors, app4, store} = Rondo.Test.submit_action(app3, store, action_ref, %{"x" => "foo"})
 

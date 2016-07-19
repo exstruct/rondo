@@ -51,7 +51,7 @@ defmodule Rondo.Test do
         :error
     end
   end
-  def fetch_path([value], [0 | path]) do
+  def fetch_path([value | _], [0 | path]) do
     fetch_path(value, path)
   end
   def fetch_path([_ | list], [key | path]) when is_integer(key) do
@@ -90,7 +90,8 @@ defmodule Rondo.Test do
       {:ok, descriptor, update_fn, app} ->
         case Rondo.State.Store.handle_action(store, descriptor, update_fn) do
           {:ok, store} ->
-            {:ok, resolve(app.components), app, store}
+            {app, store} = Rondo.Application.render(app, store)
+            {:ok, app, store}
           {:error, error, store} ->
             {:error, error, app, store}
         end
