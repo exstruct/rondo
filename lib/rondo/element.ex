@@ -1,5 +1,8 @@
 defmodule Rondo.Element do
-  defstruct [:key, :type, :props, :children]
+  defstruct [key: nil,
+             type: nil,
+             props: %{},
+             children: []]
 
   defmacro __using__(_) do
     quote do

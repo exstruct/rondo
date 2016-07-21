@@ -20,4 +20,22 @@ defmodule Rondo.Diff do
   def get_type(_) do
     nil
   end
+
+  defmodule Stream do
+    defstruct [:stream]
+
+    defimpl Enumerable do
+      def count(%{stream: stream}) do
+        Enumerable.count(stream)
+      end
+
+      def member?(%{stream: stream}, item) do
+        Enumerable.member?(stream, item)
+      end
+
+      def reduce(%{stream: stream}, acc, fun) do
+        Enumerable.reduce(stream, acc, fun)
+      end
+    end
+  end
 end

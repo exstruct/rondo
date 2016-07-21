@@ -1,12 +1,32 @@
 defmodule Rondo.Path do
-  defstruct [:path, :parent]
+  defstruct [path: [], parent: nil]
 
   def create_root() do
     %__MODULE__{path: []}
   end
 
   def create_child_path(parent, path) do
-    %__MODULE__{path: path, parent: parent}
+    %__MODULE__{path: :lists.reverse(path), parent: parent}
+  end
+
+  def to_list(path), do: to_list(path, [])
+  defp to_list(%{parent: nil, path: path}, acc) do
+    [path | acc] |> :lists.reverse()
+  end
+  defp to_list(%{parent: parent, path: path}, acc) do
+    to_list(parent, [path | acc])
+  end
+
+  def from_list(path) do
+    path
+    |> :lists.reverse()
+    |> from_list(nil)
+  end
+  def from_list([], path) do
+    path
+  end
+  def from_list([path | paths], parent) do
+    from_list(paths, %__MODULE__{parent: parent, path: path})
   end
 end
 
@@ -26,7 +46,6 @@ defimpl Inspect, for: Rondo.Path do
 
   defp path_to_doc(path, opts) do
     path
-    |> :lists.reverse()
     |> to_doc(opts)
   end
 end

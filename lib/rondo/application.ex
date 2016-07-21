@@ -61,9 +61,14 @@ defmodule Rondo.Application do
 
   def diff(%{components: curr_components, action_store: curr_affordances, phase: @render},
            %{components: prev_components, action_store: prev_affordances}) do
-    curr = %{"components" => curr_components, "schemas" => curr_affordances}
-    prev = %{"components" => prev_components, "schemas" => prev_affordances}
-    Rondo.Diff.diff(curr, prev)
+    curr = %{0 => curr_components, 1 => curr_affordances}
+    prev = %{0 => prev_components, 1 => prev_affordances}
+    case Rondo.Diff.diff(curr, prev) do
+      diff when is_list(diff) ->
+        diff
+      stream ->
+        %Rondo.Diff.Stream{stream: stream}
+    end
   end
 
   def prepare_action(app = %{action_store: actions, phase: @render}, action_ref, data) do
