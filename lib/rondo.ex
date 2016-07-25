@@ -2,7 +2,7 @@ defmodule Rondo do
   alias Rondo.Application
   alias Rondo.Element
 
-  def create_application(element) when is_atom(element) do
+  def create_application(element) when is_atom(element) or is_binary(element) do
     element
     |> Element.el()
     |> create_application()
@@ -12,7 +12,7 @@ defmodule Rondo do
     |> Application.init()
   end
 
-  def create_application(element, props) when is_atom(element) do
+  def create_application(element, props) when is_atom(element) or is_binary(element) do
     element
     |> Element.el(props)
     |> create_application()

@@ -4,6 +4,8 @@ defmodule Rondo.Action.Store do
              validators: %{},
              prev_affordances: %{}]
 
+  alias Rondo.Action.Handler
+
   def init(store = %{affordances: affordances}) do
     %{store | actions: %{}, prev_affordances: affordances}
   end
@@ -35,9 +37,7 @@ defmodule Rondo.Action.Store do
           {:error, errors} ->
             {:invalid, errors, store}
           :ok ->
-            update_fn = fn(state) ->
-              call(handler, :action, [props, state, data])
-            end
+            update_fn = &Handler.action(handler, props, &1, data)
             events = Enum.map(events, &(&1.(data)))
             {:ok, [{state_descriptor, update_fn} | events], store}
         end
@@ -50,7 +50,7 @@ defmodule Rondo.Action.Store do
       {:ok, {id, schema}} ->
         {id, schema, key, affordances}
       :error ->
-        schema = call(handler, :affordance, [props])
+        schema = Handler.affordance(handler, props)
         id = hash(schema)
         affordances = Map.put(affordances, key, {id, schema})
         {id, schema, key, affordances}
@@ -69,9 +69,7 @@ defmodule Rondo.Action.Store do
 
   defp init_events(%{reference: descriptor, handler: handler, props: props}) do
     fn(data) ->
-      {descriptor, fn(state) ->
-        call(handler, :event, [props, state, data])
-      end}
+      {descriptor, &Rondo.Event.Handler.event(handler, props, &1, data)}
     end
   end
 
@@ -93,10 +91,6 @@ defmodule Rondo.Action.Store do
 
   defp validate(validator, data) do
     apply(app_validator, :validate, [validator, data])
-  end
-
-  defp call(handler, fun, args) do
-    apply(handler, fun, args)
   end
 
   defp hash(contents) do

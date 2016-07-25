@@ -57,24 +57,17 @@ defmodule Rondo.Component do
     Tree.init(tree, tree_descriptor, path, state, action_store)
   end
 
-  defp get_state(element = %{props: props, children: children}, context) do
+  defp get_state(%{type: type, props: props, children: children}, context) do
     props = Map.put(props, :children, children)
-    call(element, :state, [props, context], props)
+    Rondo.Element.Mountable.state(type, props, context)
   end
 
-  defp get_context(element, state) do
-    call(element, :context, [state], %{})
+  defp get_context(%{type: type}, state) do
+    Rondo.Element.Mountable.context(type, state)
   end
 
-  defp get_tree(element, state) do
-    call(element, :render, [state], nil)
-  end
-
-  defp call(%{type: type}, fun, args, _) when is_atom(type) do
-    apply(type, fun, args)
-  end
-  defp call(_, _, _, default) do
-    default
+  defp get_tree(%{type: type}, state) do
+    Rondo.Element.Mountable.render(type, state)
   end
 end
 

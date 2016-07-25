@@ -25,7 +25,7 @@ defmodule Rondo.Tree do
   def traverse(descriptor, component_path, state, store) do
     acc = {%{}, MapSet.new(), store}
     Rondo.Traverser.postwalk(descriptor, [], acc, fn
-      (%Rondo.Element{type: type} = el, path, {children, actions, store}) when is_atom(type) ->
+      (%Rondo.Element{type: type} = el, path, {children, actions, store}) when not is_binary(type) ->
         path = Path.create_child_path(component_path, path)
         children = Map.put(children, path, el)
         {%Pointer{path: path}, {children, actions, store}}
