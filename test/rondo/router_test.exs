@@ -28,6 +28,9 @@ defmodule Test.Rondo.Router do
     defmodule Router do
       use Rondo.Router
 
+      def init(%{nil: true}) do
+        nil
+      end
       def init(_props) do
         :first
       end
@@ -55,5 +58,13 @@ defmodule Test.Rondo.Router do
       {:ok, event_ref} = fetch_path(app, [:props, :event, :ref])
       {:ok, app, _store} = submit_action(app, store, event_ref, nil)
       assert_path app, [], %{type: "Second"}
+
+    "router struct" ->
+      {app, _store} = el(Router.__router__) |> render()
+      assert_path app, [], %{type: "First"}
+
+    "nil init" ->
+      {app, _store} = el(Router, %{nil: true}) |> render()
+      assert_path app, [], nil
   end
 end

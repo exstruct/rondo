@@ -1,5 +1,5 @@
 defmodule Rondo.Router do
-  defstruct [:id, :init, :route]
+  defstruct [:id, :init, :route, :state, :context, :render]
 
   defmacro __using__(_) do
     quote do
@@ -8,8 +8,15 @@ defmodule Rondo.Router do
       @router %Rondo.Router{
         id: __MODULE__,
         init: &__MODULE__.init/1,
-        route: &__MODULE__.route/2
+        route: &__MODULE__.route/2,
+        state: &__MODULE__.state/2,
+        context: &__MODULE__.context/1,
+        render: &__MODULE__.render/1
       }
+
+      def __router__ do
+        @router
+      end
 
       def store do
         Rondo.Router.store(@router)
@@ -23,50 +30,67 @@ defmodule Rondo.Router do
         event(store(), @router, route)
       end
 
-      # element callbacks
-      def state(props, context) do
-        Rondo.Element.Mountable.Rondo.Router.state(@router, props, context)
-      end
-
-      def context(state) do
-        Rondo.Element.Mountable.Rondo.Router.context(@router, state)
-      end
-
       def render(state) do
-        Rondo.Element.Mountable.Rondo.Router.render(@router, state)
+        Rondo.Router.render(@router, state)
+      end
+
+      defoverridable [render: 1]
+
+      @before_compile unquote(__MODULE__)
+    end
+  end
+
+  defmacro __before_compile__(_) do
+    quote do
+      defoverridable [state: 2]
+
+      def state(props, context) do
+        props
+        |> super(context)
+        |> Map.merge(Rondo.Router.state(@router, props, context))
       end
     end
   end
 
-  def store(%{id: component_path, init: init}, params \\ %{}, id \\ nil) do
+  def store(%{id: component_path}) do
     %Rondo.Store{
       component_path: component_path,
       state_path: [:route],
       type: Rondo.Router,
-      props: init.(params),
-      id: id
+      props: nil
     }
   end
 
-  def route(%{route: get_route}, params, route) do
-    get_route.(params, route)
+  def state(%{} = router, _, _) do
+    %{
+      route: store(router)
+    }
+  end
+
+  def render(%{init: init} = router, %{route: nil} = state) do
+    case init.(state) do
+      nil ->
+        nil
+      route ->
+        render(router, %{state | route: route})
+    end
+  end
+  def render(%{route: get_route}, %{route: route} = state) do
+    get_route.(state, route)
   end
 end
 
 defimpl Rondo.Element.Mountable, for: Rondo.Router do
-  def state(router, params, _) do
-    %{
-      params: params,
-      route: Rondo.Router.store(router, params)
-    }
+  def state(%{state: state}, params, context) do
+    state.(params, context)
   end
 
-  def context(_, _) do
-    %{}
+  def context(%{context: context}, state) do
+    context.(state)
   end
 
-  def render(router, %{params: params, route: route}) do
-    Rondo.Router.route(router, params, route)
+  def render(%{render: render}, state) do
+    render.(state)
   end
 end
 
