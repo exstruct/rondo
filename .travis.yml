@@ -1,9 +1,13 @@
 language: elixir
 elixir:
-  - 1.1.1
-  - 1.2.6
-  - 1.3.2
+- 1.1.1
+- 1.2.6
+- 1.3.2
 sudo: false
 env:
-  - MIX_ENV=test
+  matrix:
   - MIX_ENV=bench
+  global:
+    secure: lOnolHI8SFBcw9Eldjnw+frVFCmNehQKJishnLhlkH0hXcaYXLBKN7a2xey3FT5X5HRoejmxmWUZvGWts4FqasDUDWl7ywS+WAAtTJl0dvcir3/HHsPtdHk1tJWnrHR5ILi/IEnmVm1Hjc31XLkmg1pq7A/4f3IgCbu6wN5DZv+IaR+edm52nN8V3VqnvOUM6e5CnwWQfT/AH+MZGjUGq9+oNer7pe4Bvv7zX0kaKlR/Z6wsM/hBrojKvcSUf6y6OQjLJlWbRmQD6aLXiFNePPTgr+jMQkmfRUETwYZ+jSyUWfNAHZR64dFxdStPWyz8dsaSgE+mVoT8uvQsrrlY68RumWtlGaz8lFfHF3KyZph2WcguJbr4V7GDkPMCjj4ffpXI/2Q1F/IUzLJRwIw0vD88QXGFGcBl5T9Yo4l9CAeDP5UW9oBvpLhqnsrBHXWvIg+G5bGW/1WGPsYTAXBjwBKxao6p/l+r3i/orjXZylc60jKcU3h9LRwkxTgKU5ApXvi+43J1uV4S7GfERjFvrAokQdV3/2RLuHcq9TeXsJBgZJ0a788ZsAtz80niKELMSr6eQrz+vUDDHffzhN2rq5mDRLxx3184z7dL2efIUfrvm7NuLTRaANBQOWSBbrIAIvaJOWrAhCkN4Bu5aULIlh6UokyinI/M0B/xJPsYjgk=
+after_success:
+- ./bin/publish-bench.sh
