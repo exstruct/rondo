@@ -1,5 +1,9 @@
 defmodule Rondo.Test do
   def render(element, state_store, context \\ %{})
+  def render(module, state_store, context) when is_atom(module) do
+    %Rondo.Element{type: module}
+    |> render(state_store, context)
+  end
   def render(element = %Rondo.Element{}, state_store, context) do
     element
     |> Rondo.create_application()
@@ -10,6 +14,10 @@ defmodule Rondo.Test do
   end
 
   def render_shallow(element, state_store, context \\ %{})
+  def render_shallow(module, state_store, context) when is_atom(module) do
+    %Rondo.Element{type: module}
+    |> render_shallow(state_store, context)
+  end
   def render_shallow(element = %Rondo.Element{}, state_store, context) do
     element
     |> Rondo.create_application()
@@ -90,6 +98,12 @@ defmodule Rondo.Test do
         {:ok, app, store}
       error ->
         error
+    end
+  end
+
+  defmacro assert_path(app, path, match) do
+    quote do
+      assert {:ok, unquote(match)} = Rondo.Test.fetch_path(unquote(app), unquote(path))
     end
   end
 

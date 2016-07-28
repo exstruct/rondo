@@ -2,8 +2,16 @@ defmodule Test.Rondo.Case do
   defmacro __using__(opts) do
     quote do
       use ExUnit.Case, unquote(opts)
-      import unquote(__MODULE__), only: [context: 2]
+      use ExCheck
+      use Benchfella
+      import Rondo.Test
+      alias Rondo.Test.Store, as: TestStore
+      import unquote(__MODULE__), only: [render: 1, context: 2]
     end
+  end
+
+  def render(element) do
+    Rondo.Test.render(element, %Rondo.Test.Store{})
   end
 
   defmacro context(name, [do: body, after: tests]) do
@@ -17,16 +25,54 @@ defmodule Test.Rondo.Case do
         unquote(body)
         @before_compile Test.Rondo.Case
       end
-      unquote(for {:->, _, [[test_name | args], body]} <- tests do
+      unquote_splicing(format_after(tests, cname, name))
+    end
+  end
+
+  defp format_after(tests, cname, name) when is_list(tests) do
+    tests
+    |> Enum.map(fn
+      {:->, _, [[test_name | args], body]} ->
+        test_name = "#{name} | #{test_name}"
         quote do
-          test unquote_splicing(["#{test_name} | #{inspect(name)}" | args]) do
+          test unquote_splicing([test_name | args]) do
             use Rondo.Element
             use unquote(cname)
             unquote(body)
             true
           end
+
+          unquote(format_bench(test_name, cname, body))
         end
-      end)
+      {:->, _, [[], body]} ->
+        format_after(body, cname, name) |> hd()
+    end)
+  end
+  defp format_after(test, cname, _name) do
+    [quote do
+      defmodule Test do
+        use ExUnit.Case, async: false
+        use ExCheck
+        use unquote(cname)
+        unquote(test)
+      end
+    end]
+  end
+
+  if Mix.env == :bench do
+    defp format_bench(name, cname, body) do
+      quote do
+        bench inspect(unquote(name)) do
+          use Rondo.Element
+          use unquote(cname)
+          unquote(body)
+          true
+        end
+      end
+    end
+  else
+    defp format_bench(_, _, _) do
+      nil
     end
   end
 
@@ -55,4 +101,10 @@ defmodule Test.Rondo.Case do
   end
 end
 
+IO.inspect Mix.env
+
+if Mix.env == :bench do
+  Benchfella.start()
+end
+ExCheck.start()
 ExUnit.start()

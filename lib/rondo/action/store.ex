@@ -86,7 +86,7 @@ defmodule Rondo.Action.Store do
   end
 
   defp app_validator() do
-    Application.get_env(Rondo, :validator, Rondo.Validator.Default)
+    Application.get_env(:rondo, :validator, Rondo.Validator.Default)
   end
 
   defp validate(validator, data) do
