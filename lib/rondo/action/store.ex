@@ -4,6 +4,8 @@ defmodule Rondo.Action.Store do
              validators: %{},
              prev_affordances: %{}]
 
+  @app_validator Application.get_env(:rondo, :validator, Rondo.Validator.Default)
+
   alias Rondo.Action.Handler
 
   def init(store = %{affordances: affordances}) do
@@ -52,6 +54,7 @@ defmodule Rondo.Action.Store do
       :error ->
         schema = Handler.affordance(handler, props)
         id = hash(schema)
+        schema = %Rondo.Schema{schema: schema}
         affordances = Map.put(affordances, key, {id, schema})
         {id, schema, key, affordances}
     end
@@ -78,19 +81,15 @@ defmodule Rondo.Action.Store do
       {:ok, validator} ->
         {validator, store}
       :error ->
-        {_, schema} = Map.fetch!(affordances, schema_ref) || %{}
-        validator = apply(app_validator, :init, [schema])
+        {_, %{schema: schema}} = Map.fetch!(affordances, schema_ref)
+        validator = @app_validator.init(schema)
         store = %{store | validators: Map.put(validators, schema_ref, validator)}
         {validator, store}
     end
   end
 
-  defp app_validator() do
-    Application.get_env(:rondo, :validator, Rondo.Validator.Default)
-  end
-
   defp validate(validator, data) do
-    apply(app_validator, :validate, [validator, data])
+    @app_validator.validate(validator, data)
   end
 
   defp hash(contents) do
