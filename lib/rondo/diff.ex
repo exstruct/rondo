@@ -7,8 +7,8 @@ defmodule Rondo.Diff do
         {:error, __MODULE__}
       end
 
-      def member?(%{stream: stream}, item) do
-        Enumerable.member?(stream, item)
+      def member?(_, _) do
+        {:error, __MODULE__}
       end
 
       def reduce(%{stream: stream}, acc, fun) do

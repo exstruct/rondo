@@ -124,4 +124,82 @@ defmodule Test.Rondo.Component.State do
 
       assert_path app, [0], "Robert"
   end
+
+  context :ref_ref do
+    defmodule First do
+      use Rondo.Component
+
+      def state(props, _) do
+        %{
+          name: props.name
+        }
+      end
+
+      def render(%{name: name}) do
+        el("Text", nil, [name])
+      end
+    end
+
+    defmodule Second do
+      use Rondo.Component
+
+      def state(_, _) do
+        %{
+          name: create_store("Joe")
+        }
+      end
+
+      def render(_) do
+        el(First, %{name: ref([:name])})
+      end
+    end
+  after
+    "render" ->
+      {app, _store} = render(Second)
+
+      assert_path app, [0], "Joe"
+  end
+
+  context :ref_fallback do
+    defmodule First do
+      use Rondo.Component
+
+      def render(_) do
+        el("Text")
+      end
+    end
+
+    defmodule Second do
+      use Rondo.Component
+
+      def state(_, _) do
+        %{
+          bar: create_store()
+        }
+      end
+
+      def render(_) do
+        el(First, %{greeting: ref([:foo], [:bar])})
+      end
+    end
+  after
+    "render" ->
+      {app, _store} = render(Second)
+
+      assert_path app, [:type], "Text"
+  end
+
+  context :bad_ref do
+    defmodule Component do
+      use Rondo.Component
+      def render(_) do
+        el("Text", %{ref: ref([:path, :to, :ref])})
+      end
+    end
+  after
+    "render" ->
+      assert_raise Rondo.Store.Reference.Error, fn() ->
+        render(Component)
+      end
+  end
 end

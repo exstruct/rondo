@@ -67,4 +67,65 @@ defmodule Test.Rondo.Action do
       end
     end
   end
+
+  context :invalid do
+    defmodule Increment do
+      def affordance(_) do
+        %{
+          "type" => "integer"
+        }
+      end
+
+      def action(_, state, input) do
+        state + input
+      end
+    end
+
+    defmodule Component do
+      use Rondo.Component
+
+      def state(_, _) do
+        %{
+          count: create_store(0),
+        }
+      end
+
+      def render(%{count: count}) do
+        el("Input", %{
+          on_submit: action(ref([:count]), Increment)
+        }, [count])
+      end
+    end
+  after
+    "invalid input" ->
+      {app, store} = render(Component)
+
+      {:ok, ref} = fetch_path(app, [:props, :on_submit, :ref])
+
+      assert {:invalid, _errors, _app, _store} = submit_action(app, store, ref, "Foo")
+
+    "non-existant" ->
+      {app, store} = render(Component)
+
+      assert {:invalid, _errors, _app, _store} = submit_action(app, store, -1, 1)
+  end
+
+  context :nil_ref do
+    defmodule Component do
+      use Rondo.Component
+
+      def render(_) do
+        el("Input", %{
+          on_submit: action(nil, Action, %{}, [
+            event(nil, Event, %{})
+          ])
+        })
+      end
+    end
+  after
+    "render" ->
+      {app, _store} = render(Component)
+
+      assert {:ok, nil} = fetch_path(app, [:props, :on_submit])
+  end
 end

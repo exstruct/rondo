@@ -31,7 +31,7 @@ defmodule Rondo.Application do
     {component, state_store, action_store} =
       Rondo.Component.mount(component, path, context, state_store, action_store)
 
-    current = put_component(current, path, component)
+    current = Map.put(current, path, component)
 
     %{tree: %{children: children}, context: %{root: child_context}} = component
     child_context = Map.merge(context, child_context)
@@ -50,13 +50,6 @@ defmodule Rondo.Application do
       _ ->
         %Rondo.Component{element: element}
     end
-  end
-
-  defp put_component(components, path, component) do
-    if Map.has_key?(components, path) do
-      throw :cannot_update_mounted_component
-    end
-    Map.put(components, path, component)
   end
 
   def prepare_action(app = %{action_store: actions, phase: @render}, action_ref, data) do
