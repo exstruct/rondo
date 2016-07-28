@@ -1,0 +1,22 @@
+duration:1.0;mem stats:false;sys mem stats:false
+module;test;tags;iterations;elapsed
+Test.Rondo	"create_application | module, props"		10000000	2085799
+Test.Rondo	"create_application | module"		10000000	2074873
+Test.Rondo	"create_application | binary, props"		10000000	1997851
+Test.Rondo	"create_application | binary"		10000000	2072101
+Test.Rondo.Component	"inspect | inspect"		50000	2518524
+Test.Rondo.Component	"inspect | inspect pointer"		1000000	1630241
+Test.Rondo.Component	"inspect | inspect pending"		50000	1559430
+Test.Rondo.Component.Context	"basic | with props"		100000	2230266
+Test.Rondo.Component.Render	"rerender | same state"		100000	1829718
+Test.Rondo.Component.Render	"props | wrong props"		100000	1064567
+Test.Rondo.Component.State	"passed_reference | updated_ref"		50000	2359918
+Test.Rondo.Component.State	"passed_reference | ref"		100000	2348257
+Test.Rondo.Component.State	"from_props | state"		100000	1232788
+Test.Rondo.Component.State	"from_props | state with props"		100000	1343540
+Test.Rondo.Component.State	"from_context | with context"		100000	1265089
+Test.Rondo.Component.State	"from_context | state"		100000	1233564
+Test.Rondo.Component.State	"create_store | state"		100000	1400043
+Test.Rondo.Component.State	"create_store | modified state"		100000	2844831
+Test.Rondo.Element	"inspect | with children"		100000	2734607
+Test.Rondo.Element	"binary_element | with props"		100000	1475817
