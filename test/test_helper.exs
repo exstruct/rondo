@@ -4,6 +4,7 @@ defmodule Test.Rondo.Case do
       use ExUnit.Case, unquote(opts)
       use ExCheck
       use Benchfella
+      import ExProf.Macro
       import Rondo.Test
       alias Rondo.Test.Store, as: TestStore
       import unquote(__MODULE__), only: [render: 1, context: 2]
@@ -35,13 +36,7 @@ defmodule Test.Rondo.Case do
       {:->, _, [[test_name | args], body]} ->
         test_name = "#{name} | #{test_name}"
         quote do
-          test unquote_splicing([test_name | args]) do
-            use Rondo.Element
-            use unquote(cname)
-            unquote(body)
-            true
-          end
-
+          unquote(format_test([test_name | args], cname, body, Mix.env))
           unquote(format_bench(test_name, cname, body))
         end
       {:->, _, [[], body]} ->
@@ -57,6 +52,25 @@ defmodule Test.Rondo.Case do
         unquote(test)
       end
     end]
+  end
+
+  defp format_test(args, cname, body, :profile) do
+    body = quote do
+      profile do
+        unquote(body)
+      end
+    end
+    format_test(args, cname, body, :test)
+  end
+  defp format_test(args, cname, body, _) do
+    quote do
+      test unquote_splicing(args) do
+        use Rondo.Element
+        use unquote(cname)
+        unquote(body)
+        true
+      end
+    end
   end
 
   if Mix.env == :bench do
@@ -100,8 +114,6 @@ defmodule Test.Rondo.Case do
     end
   end
 end
-
-IO.inspect Mix.env
 
 if Mix.env == :bench do
   Benchfella.start()

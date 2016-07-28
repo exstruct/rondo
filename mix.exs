@@ -9,7 +9,6 @@ defmodule Rondo.Mixfile do
      test_coverage: [tool: ExCoveralls],
      build_embedded: Mix.env == :prod,
      start_permanent: Mix.env == :prod,
-     consolidate_protocols: !(Mix.env in [:dev, :test, :bench]),
      package: package,
      deps: deps]
   end
@@ -21,11 +20,17 @@ defmodule Rondo.Mixfile do
   defp deps do
     [{:ex_json_schema, "~> 0.4.1", optional: true},
 
-     {:excheck, "~> 0.4.1", only: [:dev, :test, :bench]},
-     {:triq, github: "krestenkrab/triq", only: [:dev, :test, :bench]},
-     {:benchfella, "~> 0.3.1", only: [:dev, :test, :bench]},
      {:mix_test_watch, "~> 0.2", only: :dev},
-     {:excoveralls, "~> 0.5.1", only: [:dev, :test, :bench]},]
+
+     {:exprof, "~> 0.2.0", only: test_modes},
+     {:excheck, "~> 0.4.1", only: test_modes},
+     {:triq, github: "krestenkrab/triq", only: test_modes},
+     {:benchfella, "~> 0.3.1", only: test_modes},
+     {:excoveralls, "~> 0.5.1", only: test_modes},]
+  end
+
+  defp test_modes do
+    [:dev, :test, :bench, :profile]
   end
 
   defp package do

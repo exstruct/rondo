@@ -34,6 +34,7 @@ defmodule Rondo.Component do
     state_descriptor = get_state(element, context)
     case State.init(state, state_descriptor, path, state_store) do
       {^state, state_store} ->
+        {_, action_store} = init_tree(component, path, action_store, state)
         {component, state_store, action_store}
       {state, state_store} ->
         {context, action_store} = init_context(component, path, action_store, state)

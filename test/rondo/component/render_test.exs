@@ -59,4 +59,20 @@ defmodule Test.Rondo.Component.Render do
         el(Component) |> render()
       end
   end
+
+  context :rerender do
+    defmodule Component do
+      use Rondo.Component
+
+      def render(%{name: name}) do
+        el("Text", nil, [name])
+      end
+    end
+  after
+    "same state" ->
+      {app, store} = el(Component, %{name: "Robert"}) |> render()
+      {app, _store} = render(app, store)
+
+      assert_path app, [0], "Robert"
+  end
 end
