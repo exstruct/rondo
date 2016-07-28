@@ -4,7 +4,7 @@ if [ "$TRAVIS_PULL_REQUEST" == "false" ] && [ "$TRAVIS_BRANCH" == "master" ] && 
 
   echo -e "Publishing benchmarks...\n"
 
-  cp bench/snapshots $HOME/snapshots
+  cp -R bench/snapshots $HOME/snapshots
 
   cd $HOME
   git config --global user.email "travis@travis-ci.org"
