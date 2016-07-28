@@ -1,0 +1,18 @@
+duration:1.0;mem stats:false;sys mem stats:false
+module;test;tags;iterations;elapsed
+Test.Rondo	"create_application | module, props"		10000000	2208400
+Test.Rondo	"create_application | module"		10000000	2174131
+Test.Rondo	"create_application | binary, props"		10000000	2239976
+Test.Rondo	"create_application | binary"		10000000	2087249
+Test.Rondo.Component.Context	"basic | with props"		100000	2257488
+Test.Rondo.Component.Render	"rerender | same state"		100000	1836168
+Test.Rondo.Component.Render	"props | wrong props"		100000	1079453
+Test.Rondo.Component.State	"passed_reference | updated_ref"		50000	2335948
+Test.Rondo.Component.State	"passed_reference | ref"		100000	2608866
+Test.Rondo.Component.State	"from_props | state"		100000	1283848
+Test.Rondo.Component.State	"from_props | state with props"		100000	1485941
+Test.Rondo.Component.State	"from_context | with context"		100000	1304479
+Test.Rondo.Component.State	"from_context | state"		100000	1236962
+Test.Rondo.Component.State	"create_store | state"		100000	1390569
+Test.Rondo.Component.State	"create_store | modified state"		100000	2871540
+Test.Rondo.Element	"binary_element | with props"		100000	1505183
