@@ -12,7 +12,7 @@ defmodule Test.Rondo.Case do
   end
 
   def render(element) do
-    Rondo.Test.render(element, %Rondo.Test.Store{})
+    Rondo.Test.render(element, Rondo.Test.Store.init(%{}))
   end
 
   defmacro context(name, [do: body, after: tests]) do

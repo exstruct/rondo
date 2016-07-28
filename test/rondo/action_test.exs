@@ -14,19 +14,28 @@ defmodule Test.Rondo.Action do
       end
     end
 
+    defmodule Event do
+      def event(_, state, input) do
+        state + input
+      end
+    end
+
     defmodule Component do
       use Rondo.Component
 
       def state(_, _) do
         %{
-          count: create_store(0)
+          count: create_store(0),
+          event_count: create_store(0)
         }
       end
 
-      def render(%{count: count}) do
+      def render(%{count: count, event_count: event_count}) do
         el("Input", %{
-          on_submit: action(ref([:count]), Increment)
-        }, [count])
+          on_submit: action(ref([:count]), Increment, %{}, [
+            event(ref([:event_count]), Event)
+          ])
+        }, [count, event_count])
       end
     end
   after
@@ -46,8 +55,10 @@ defmodule Test.Rondo.Action do
           case submit_action(app, store, ref, amount) do
             {:ok, app, store} ->
               {:ok, value} = fetch_path(app, [0])
+              {:ok, event_value} = fetch_path(app, [1])
 
-              {[value == expected], {app, store}}
+              {[value == expected,
+                event_value == expected], {app, store}}
             {:invalid, _, app, store} ->
               {[false], {app, store}}
           end
