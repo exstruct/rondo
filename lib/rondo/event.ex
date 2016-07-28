@@ -12,8 +12,11 @@ defmodule Rondo.Event do
   def event(ref, handler) do
     event(ref, handler, %{})
   end
-  def event(%Reference{} = ref, handler, props) when is_atom(handler) do
+  def event(%Reference{} = ref, handler, props) do
     %__MODULE__{reference: ref, handler: handler, props: props}
+  end
+  def event(%Rondo.Store{} = store, handler, props) do
+    %__MODULE__{reference: store, handler: handler, props: props}
   end
   def event(nil, handler, props) do
     %__MODULE__{handler: handler, props: props}
