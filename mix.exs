@@ -3,7 +3,7 @@ defmodule Rondo.Mixfile do
 
   def project do
     [app: :rondo,
-     version: "0.1.0",
+     version: "0.1.1",
      elixir: "~> 1.1",
      description: "component rendering library",
      test_coverage: [tool: ExCoveralls],
