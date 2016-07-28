@@ -11,7 +11,7 @@ defmodule Rondo.Path do
 
   def to_list(path), do: to_list(path, [])
   defp to_list(%{parent: nil, path: path}, acc) do
-    [path | acc] |> :lists.reverse()
+    [path | acc]
   end
   defp to_list(%{parent: parent, path: path}, acc) do
     to_list(parent, [path | acc])
@@ -19,13 +19,12 @@ defmodule Rondo.Path do
 
   def from_list(path) do
     path
-    |> :lists.reverse()
     |> from_list(nil)
   end
-  def from_list([], path) do
+  defp from_list([], path) do
     path
   end
-  def from_list([path | paths], parent) do
+  defp from_list([path | paths], parent) do
     from_list(paths, %__MODULE__{parent: parent, path: path})
   end
 end

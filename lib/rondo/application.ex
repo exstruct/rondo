@@ -11,7 +11,7 @@ defmodule Rondo.Application do
     %__MODULE__{entry: entry}
   end
 
-  def render(app = %{entry: entry, action_store: action_store}, state_store, context \\ %{}) do
+  def render(app = %{entry: entry, action_store: action_store}, state_store, context) do
     path = Rondo.Path.create_root()
     current = %{}
     prev = app.components
@@ -59,18 +59,6 @@ defmodule Rondo.Application do
     Map.put(components, path, component)
   end
 
-  def diff(%{components: curr_components, action_store: curr_affordances, phase: @render},
-           %{components: prev_components, action_store: prev_affordances}) do
-    curr = %{0 => curr_components, 1 => curr_affordances}
-    prev = %{0 => prev_components, 1 => prev_affordances}
-    case Rondo.Diff.diff(curr, prev) do
-      diff when is_list(diff) ->
-        diff
-      stream ->
-        %Rondo.Diff.Stream{stream: stream}
-    end
-  end
-
   def prepare_action(app = %{action_store: actions, phase: @render}, action_ref, data) do
     case Rondo.Action.Store.prepare_update(actions, action_ref, data) do
       {:invalid, errors, action_store} ->
@@ -80,5 +68,14 @@ defmodule Rondo.Application do
         app = %{app | action_store: action_store}
         {:ok, descriptors, app}
     end
+  end
+end
+
+defimpl Rondo.Diffable, for: Rondo.Application do
+  def diff(%{components: curr_components, action_store: curr_affordances, phase: @for.RENDER},
+           %{components: prev_components, action_store: prev_affordances}, path) do
+    curr = %{0 => curr_components, 1 => curr_affordances}
+    prev = %{0 => prev_components, 1 => prev_affordances}
+    @protocol.diff(curr, prev, path)
   end
 end

@@ -25,10 +25,10 @@ defmodule Rondo.Tree do
   def traverse(descriptor, component_path, state, store) do
     acc = {%{}, MapSet.new(), store}
     Rondo.Traverser.postwalk(descriptor, [], acc, fn
-      (%Rondo.Element{type: type} = el, path, {children, actions, store}) when not is_binary(type) ->
+      (%Rondo.Element{type: type, props: props, children: c} = el, path, {children, actions, store}) when not is_binary(type) ->
         path = Path.create_child_path(component_path, path)
         children = Map.put(children, path, el)
-        {%Pointer{path: path}, {children, actions, store}}
+        {%Pointer{type: type, props: props, children: c, path: path}, {children, actions, store}}
       (%Reference{} = ref, _path, acc) ->
         ref = resolve(ref, state.children, component_path)
         {ref, acc}

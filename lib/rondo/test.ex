@@ -10,7 +10,7 @@ defmodule Rondo.Test do
     |> render(state_store, context)
   end
   def render(app, state_store, context) do
-    Rondo.Application.render(app, state_store, context)
+    Rondo.render(app, state_store, context)
   end
 
   def render_shallow(element, state_store, context \\ %{})
@@ -94,7 +94,7 @@ defmodule Rondo.Test do
   def submit_action(app, store, ref, data) do
     case Rondo.submit_action(app, store, ref, data) do
       {:ok, app, store} ->
-        {app, store} = Rondo.Application.render(app, store)
+        {app, store} = Rondo.render(app, store)
         {:ok, app, store}
       error ->
         error
@@ -111,8 +111,8 @@ defmodule Rondo.Test do
     components
     |> get_component(path)
     |> Rondo.Traverser.prewalk([], nil, fn
-      (%Rondo.Component.Pointer{path: path}, _, acc) ->
-        component = resolve(components, path)
+      (%Rondo.Component.Pointer{path: path} = pointer, _, acc) ->
+        component = resolve(components, path) || pointer
         {component, acc}
       (node, _, acc) ->
         {node, acc}
@@ -126,6 +126,9 @@ defmodule Rondo.Test do
     |> tree()
   end
 
+  defp tree(nil) do
+    nil
+  end
   defp tree(%{tree: %{root: root}}) do
     root
   end

@@ -102,7 +102,7 @@ store = %MyApp.Store{}
 app = Rondo.create_application(MyApp.Component)
 
 # Perform the initial render
-{app, store} = Rondo.Application.render(app, store)
+{app, store} = Rondo.render(app, store)
 
 # Assert that the counter is initialized and being sent as the first child
 {:ok, 0} = Rondo.Test.fetch_path(app, [0])
@@ -120,7 +120,7 @@ app = Rondo.create_application(MyApp.Component)
   Rondo.submit_action(app, store, action_ref, 1)
 
 # Trigger a render
-{app, store} = Rondo.Application.render(app, store)
+{app, store} = Rondo.render(app, store)
 
 # We now have the incremented value!
 {:ok, 1} = Rondo.Test.fetch_path(app, [0])

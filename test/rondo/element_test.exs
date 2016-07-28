@@ -14,4 +14,11 @@ defmodule Test.Rondo.Element do
 
       assert_path app, [:props, :foo], "bar"
   end
+
+  context :inspect do
+    # n/a
+  after
+    "with children" ->
+      assert %Rondo.Element{type: "Foo", children: ["Hello, ", "World", "!"]} |> inspect()
+  end
 end

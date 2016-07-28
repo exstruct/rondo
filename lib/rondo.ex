@@ -18,6 +18,14 @@ defmodule Rondo do
     |> create_application()
   end
 
+  def render(app, store, context \\ %{}) do
+    Rondo.Application.render(app, store, context)
+  end
+
+  def diff(current, previous) do
+    Rondo.Diff.diff(current, previous)
+  end
+
   def submit_action(app, store, ref, data) do
     case Rondo.Application.prepare_action(app, ref, data) do
       {:invalid, errors, app} ->

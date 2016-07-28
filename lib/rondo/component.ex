@@ -128,9 +128,6 @@ defimpl Inspect, for: Rondo.Component do
   end
 
   defp format_prop(name, value, opts)
-  defp format_prop(_, nil, _) do
-    empty
-  end
   defp format_prop(_, map, _) when map_size(map) == 0 do
     empty
   end

@@ -1,5 +1,5 @@
 defmodule Rondo.Component.Pointer do
-  defstruct [:path]
+  defstruct [:type, :props, :children, :path]
 end
 
 defimpl Rondo.Diffable, for: Rondo.Component.Pointer do
