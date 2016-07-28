@@ -1,6 +1,6 @@
 #!/bin/bash
 
-if [ "$TRAVIS_PULL_REQUEST" == "false" ] && [ "$TRAVIS_BRANCH" == "master" ] && [ "$MIX_ENV" == "bench"]; then
+if [ "$TRAVIS_PULL_REQUEST" == "false" ] && [ "$TRAVIS_BRANCH" == "master" ] && [ "$MIX_ENV" == "bench" ]; then
 
   echo -e "Publishing benchmarks...\n"
 
