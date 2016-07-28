@@ -1,0 +1,14 @@
+duration:1.0;mem stats:false;sys mem stats:false
+module;test;tags;iterations;elapsed
+Test.Rondo.Component.Render	"basic | render"		50000	2324350
+Test.Rondo.Component.Render	"props | render"		100	1785493
+Test.Rondo.Component.Render	"props | wrong props"		100000	2540226
+Test.Rondo.Component.Render	"reference | render"		500	2166497
+Test.Rondo.Component.State	"create_store | modified state"		100	2490538
+Test.Rondo.Component.State	"create_store | state"		100	1659864
+Test.Rondo.Component.State	"from_context | state"		100	1296257
+Test.Rondo.Component.State	"from_context | with context"		100	1328074
+Test.Rondo.Component.State	"from_props | state with props"		100	1280570
+Test.Rondo.Component.State	"from_props | state"		100	1267850
+Test.Rondo.Component.State	"passed_reference | ref"		50	1587688
+Test.Rondo.Component.State	"passed_reference | updated_ref"		50	2313301
