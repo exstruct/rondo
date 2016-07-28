@@ -3,8 +3,8 @@ defmodule Rondo.Diff do
     defstruct [:stream]
 
     defimpl Enumerable do
-      def count(%{stream: stream}) do
-        Enumerable.count(stream)
+      def count(_) do
+        {:error, __MODULE__}
       end
 
       def member?(%{stream: stream}, item) do

@@ -52,7 +52,7 @@ defmodule Test.Rondo.Diff do
         _diff = Enum.to_list(diff)
         _new = new
 
-        true
+        Enum.count(diff) >= 0
       end
     end
   end
