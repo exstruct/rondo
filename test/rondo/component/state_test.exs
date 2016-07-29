@@ -99,7 +99,7 @@ defmodule Test.Rondo.Component.State do
 
       def state(_props, _context) do
         %{
-          user: create_store(%{name: "Joe"})
+          user: create_store(%{name: "Joe"}, :ephemeral)
         }
       end
 

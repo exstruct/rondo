@@ -1,5 +1,5 @@
 defmodule Rondo.Test.Store do
-  defstruct [stores: %{}]
+  defstruct [stores: %{}, action_error: nil]
 
   def init(_) do
     %__MODULE__{}
@@ -8,6 +8,10 @@ defmodule Rondo.Test.Store do
   def update_all(%{stores: stores} = store, fun) do
     stores = Stream.map(stores, fun) |> Enum.into(%{})
     %{store | stores: stores}
+  end
+
+  def put_action_error(store, error) do
+    %{store | action_error: error}
   end
 
   defimpl Rondo.State.Store do
@@ -20,6 +24,9 @@ defmodule Rondo.Test.Store do
       store
     end
 
+    def handle_action(%{action_error: error} = store, _, _) when not is_nil(error) do
+      {:error, error, store}
+    end
     def handle_action(store, descriptor, update_fn) do
       {prev, store} = mount(store, descriptor)
       value = update_fn.(prev)

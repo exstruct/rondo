@@ -55,4 +55,34 @@ defmodule Test.Rondo.Test do
 
       assert length(elements) == 51
   end
+
+  context :action_error do
+    defmodule Action do
+      def affordance(_) do
+        %{}
+      end
+    end
+
+    defmodule Component do
+      use Rondo.Component
+
+      def state(_, _) do
+        %{
+          thing: create_store()
+        }
+      end
+
+      def render(_) do
+        el("Item", %{action: action(ref([:thing]), Action)})
+      end
+    end
+  after
+    "put_action_error" ->
+      {app, store} = render(Component)
+
+      store = TestStore.put_action_error(store, "You goofed!")
+
+      {:ok, ref} = fetch_path(app, [:props, :action, :ref])
+      {:error, _error, _app, _store} = submit_action(app, store, ref, 1)
+  end
 end
