@@ -1,0 +1,31 @@
+duration:1.0;mem stats:false;sys mem stats:false
+module;test;tags;iterations;elapsed
+Test.Rondo	"create_application | module, props"		10000000	2461587
+Test.Rondo	"create_application | module"		10000000	2918615
+Test.Rondo	"create_application | binary, props"		10000000	2432975
+Test.Rondo	"create_application | binary"		10000000	2095452
+Test.Rondo.Action	"nil_ref | render"		100000	2263814
+Test.Rondo.Action	"invalid | non-existant"		100000	1746316
+Test.Rondo.Action	"invalid | invalid input"		1000	1492550
+Test.Rondo.Component	"inspect | inspect"		50000	3416248
+Test.Rondo.Component	"inspect | inspect pointer"		1000000	1663064
+Test.Rondo.Component	"inspect | inspect pending"		50000	2328165
+Test.Rondo.Component.Context	"basic | with props"		100000	3096065
+Test.Rondo.Component.Render	"rerender | same state"		100000	2154930
+Test.Rondo.Component.Render	"props | wrong props"		100000	1388931
+Test.Rondo.Component.State	"ref_ref | render"		50000	2049060
+Test.Rondo.Component.State	"ref_fallback | render"		50000	2086678
+Test.Rondo.Component.State	"passed_reference | updated_ref"		50000	2948797
+Test.Rondo.Component.State	"passed_reference | ref"		50000	1671897
+Test.Rondo.Component.State	"from_props | state"		100000	1682451
+Test.Rondo.Component.State	"from_props | state with props"		100000	1824447
+Test.Rondo.Component.State	"from_context | with context"		100000	1760508
+Test.Rondo.Component.State	"from_context | state"		100000	1828020
+Test.Rondo.Component.State	"create_store | state"		100000	2122709
+Test.Rondo.Component.State	"create_store | modified state"		50000	1855174
+Test.Rondo.Component.State	"bad_ref | render"		100000	1371676
+Test.Rondo.Element	"inspect | with children"		50000	1777015
+Test.Rondo.Element	"binary_element | with props"		100000	2117965
+Test.Rondo.Router	"router | nil init"		100000	1413689
+Test.Rondo.Test	"find_element | render"		5000	2453505
+Test.Rondo.Test	"action_error | put_action_error"		1000	1722309
