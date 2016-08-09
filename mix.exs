@@ -27,7 +27,8 @@ defmodule Rondo.Mixfile do
      {:excheck, "~> 0.4.1", only: test_modes},
      {:triq, github: "krestenkrab/triq", only: test_modes},
      {:benchfella, "~> 0.3.1", only: test_modes},
-     {:excoveralls, "~> 0.5.1", only: test_modes},]
+     {:excoveralls, "~> 0.5.1", only: test_modes},
+     {:ex_doc, ">= 0.0.0", only: :dev}]
   end
 
   defp test_modes do
