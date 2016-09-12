@@ -15,9 +15,17 @@ defmodule Rondo.Test.Store do
   end
 
   defimpl Rondo.State.Store do
+    def initialize(store) do
+      store
+    end
+
     def mount(%{stores: stores} = store, %{props: initial} = descriptor) do
       stores = Map.put_new(stores, descriptor, initial)
       {Map.get(stores, descriptor), %{store | stores: stores}}
+    end
+
+    def finalize(store) do
+      store
     end
 
     def handle_info(store, _info) do
