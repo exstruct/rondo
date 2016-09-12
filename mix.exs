@@ -9,6 +9,7 @@ defmodule Rondo.Mixfile do
      test_coverage: [tool: ExCoveralls],
      build_embedded: Mix.env == :prod,
      start_permanent: Mix.env == :prod,
+     consolidate_protocols: true,
      package: package,
      deps: deps]
   end
