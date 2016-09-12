@@ -1,0 +1,39 @@
+duration:1.0;mem stats:false;sys mem stats:false
+module;test;tags;iterations;elapsed
+Test.Rondo	"create_application | module, props"		10000000	2470109
+Test.Rondo	"create_application | module"		10000000	2474743
+Test.Rondo	"create_application | binary, props"		10000000	2625018
+Test.Rondo	"create_application | binary"		10000000	3127882
+Test.Rondo.Action	"nil_ref | render"		100000	1703408
+Test.Rondo.Action	"invalid | non-existant"		100000	2404145
+Test.Rondo.Action	"invalid | invalid input"		1000	1418405
+Test.Rondo.Component	"inspect | inspect"		50000	3357850
+Test.Rondo.Component	"inspect | inspect pointer"		1000000	2370345
+Test.Rondo.Component	"inspect | inspect pending"		50000	1844783
+Test.Rondo.Component.Context	"basic | with props"		100000	2699503
+Test.Rondo.Component.Context	"basic | render"		100000	2591591
+Test.Rondo.Component.Render	"rerender | same state"		100000	2187999
+Test.Rondo.Component.Render	"reference | render"		100000	2385531
+Test.Rondo.Component.Render	"props | wrong props"		100000	1251120
+Test.Rondo.Component.Render	"props | render"		100000	1802291
+Test.Rondo.Component.Render	"basic | render"		100000	1196521
+Test.Rondo.Component.State	"ref_ref | render"		100000	3212821
+Test.Rondo.Component.State	"ref_fallback | render"		50000	2312245
+Test.Rondo.Component.State	"passed_reference | updated_ref"		50000	3556228
+Test.Rondo.Component.State	"passed_reference | ref"		50000	1730011
+Test.Rondo.Component.State	"from_props | state"		100000	1426862
+Test.Rondo.Component.State	"from_props | state with props"		100000	2007299
+Test.Rondo.Component.State	"from_context | with context"		100000	1871409
+Test.Rondo.Component.State	"from_context | state"		100000	1806538
+Test.Rondo.Component.State	"create_store | state"		100000	1645153
+Test.Rondo.Component.State	"create_store | modified state"		100000	3535581
+Test.Rondo.Component.State	"bad_ref | render"		100000	1927129
+Test.Rondo.Element	"inspect | with children"		50000	2400148
+Test.Rondo.Element	"binary_element | with props"		100000	2492345
+Test.Rondo.Element	"binary_element | name"		100000	2118004
+Test.Rondo.Router	"router | router struct"		50000	2985374
+Test.Rondo.Router	"router | render"		500	2696590
+Test.Rondo.Router	"router | nil init"		100000	2435188
+Test.Rondo.Test	"render_shallow | call"		100000	1320133
+Test.Rondo.Test	"find_element | render"		5000	2248500
+Test.Rondo.Test	"action_error | put_action_error"		1000	1273016
