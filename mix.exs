@@ -4,7 +4,7 @@ defmodule Rondo.Mixfile do
   def project do
     [app: :rondo,
      version: "0.1.5",
-     elixir: "~> 1.1",
+     elixir: "~> 1.2",
      description: "component rendering library",
      test_coverage: [tool: ExCoveralls],
      build_embedded: Mix.env == :prod,
