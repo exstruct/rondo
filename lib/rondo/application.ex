@@ -70,6 +70,6 @@ defimpl Rondo.Diffable, for: Rondo.Application do
            %{components: prev_components, action_store: prev_affordances}, path) do
     curr = %{0 => curr_components, 1 => curr_affordances}
     prev = %{0 => prev_components, 1 => prev_affordances}
-    @protocol.diff(curr, prev, path)
+    @protocol.Map.diff(curr, prev, path)
   end
 end

@@ -4,6 +4,6 @@ end
 
 defimpl Rondo.Diffable, for: Rondo.Schema do
   def diff(%{schema: current}, %{schema: prev}, path) do
-    Rondo.Diffable.diff(current, prev, path)
+    Rondo.Diff.diff(current, prev, path)
   end
 end

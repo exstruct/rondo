@@ -21,37 +21,16 @@ defimpl Rondo.Diffable, for: Rondo.Element do
   def diff(current, current, _path) do
     []
   end
-  def diff(curr = %{type: t, props: p}, prev = %{type: t, props: p}, path) do
-    diff_children(curr, prev, path)
-  end
-  def diff(curr = %{type: t, props: curr_p}, prev = %{type: t, props: prev_p}, path) do
-    p_ops = Rondo.Diff.diff(curr_p, prev_p, ["props" | path])
-    c_ops = diff_children(curr, prev, path)
-    Stream.concat(p_ops, c_ops)
+  def diff(%{type: t, props: curr_p, children: curr_c},
+           %{type: t, props: prev_p, children: prev_c}, path) do
+    curr_p = Map.delete(curr_p, :key)
+    prev_p = Map.delete(prev_p, :key)
+    curr = %{"props" => curr_p, "children" => curr_c}
+    prev = %{"props" => prev_p, "children" => prev_c}
+    Rondo.Diff.diff(curr, prev, path)
   end
   def diff(curr, _, path) do
     [Rondo.Operation.replace(path, curr)]
-  end
-
-  defp diff_children(%{children: current}, %{children: current}, _path) do
-    []
-  end
-  defp diff_children(%{children: current}, %{children: prev}, path) do
-    current = children_to_map(current)
-    prev = children_to_map(prev)
-    Rondo.Diff.diff(current, prev, ["children" | path])
-  end
-
-  defp children_to_map(children) do
-    children
-    |> Enum.reduce({%{}, 0}, fn
-      #TODO how do we represent ordering with a map?
-      #(el = %Rondo.Element{key: key}, {map, idx}) when not is_nil(key) ->
-      #  {Map.put(map, key, el), idx}
-      (other, {map, idx}) ->
-        {Map.put(map, idx, other), idx + 1}
-    end)
-    |> elem(0)
   end
 end
 

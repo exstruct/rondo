@@ -1,6 +1,83 @@
 defmodule Test.Rondo.Diff do
   use Test.Rondo.Case
   import Rondo.Element
+  alias Rondo.Operation.{Copy,Replace,Remove}
+
+  context :simple do
+    defmodule Component do
+      use Rondo.Component
+
+      def render(%{children: children}) do
+        el("Foo", nil, children)
+      end
+    end
+  after
+    "remove" ->
+      {first, _store} =
+        el(Component, nil, [
+          el("First"),
+          el("Second")
+        ]) |> render()
+
+      {second, _store} =
+        el(Component, nil, [
+          el("Second")
+        ]) |> render()
+
+      # TODO this should really just do a copy-remove
+      assert [%Replace{}, %Remove{}] =
+        Rondo.diff(second, first)
+
+    "switch" ->
+      {first, _store} =
+        el(Component, nil, [
+          el("First"),
+          el("Second")
+        ]) |> render()
+
+      {second, _store} =
+        el(Component, nil, [
+          el("Second"),
+          el("First")
+        ]) |> render()
+
+      # TODO this should be two copies
+      assert [%Replace{}, %Replace{}] =
+        Rondo.diff(second, first)
+
+    "insert" ->
+      {first, _store} =
+        el(Component, nil, [
+          el("First"),
+          el("Second")
+        ]) |> render()
+
+      {second, _store} =
+        el(Component, nil, [
+          el("First"),
+          el("First-and-a-half"),
+          el("Second")
+        ]) |> render()
+
+      assert [%Replace{}, %Copy{}] =
+        Rondo.diff(second, first)
+
+    "keyed" ->
+      {first, _store} =
+        el(Component, nil, [
+          el("First", %{key: "f"}, [1]),
+          el("Second", %{key: "s"}, [1])
+        ]) |> render()
+
+      {second, _store} =
+        el(Component, nil, [
+          el("Second", %{key: "s"}, [2]),
+          el("First", %{key: "f"}, [2])
+        ]) |> render()
+
+      assert [%Copy{}, %Replace{}, %Copy{}, %Replace{}] =
+        Rondo.diff(second, first)
+  end
 
   context :recursive do
     defmodule Action do
@@ -49,7 +126,7 @@ defmodule Test.Rondo.Diff do
         {new, _store} = el(Component, %{count: second}) |> render()
 
         # TODO validate the diff is correct by comparing applying the patches and comparing it to new
-        _diff = Enum.to_list(diff)
+        _diff = diff
         _new = new
 
         Enum.count(diff) >= 0

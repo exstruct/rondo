@@ -109,7 +109,7 @@ end
 
 defimpl Rondo.Diffable, for: Rondo.Action.Store do
   def diff(curr, prev, path) do
-    Rondo.Diff.diff(format(curr), format(prev), path)
+    @protocol.Map.diff(format(curr), format(prev), path)
   end
 
   defp format(%{affordances: affordances}) do

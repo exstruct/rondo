@@ -7,6 +7,10 @@ defmodule Rondo.Operation do
     defstruct [:path, :value]
   end
 
+  defmodule Copy do
+    defstruct [:from, :to]
+  end
+
   def remove(path) do
     %Remove{path: :lists.reverse(path)}
   end
@@ -15,6 +19,7 @@ defmodule Rondo.Operation do
     %Replace{path: :lists.reverse(path), value: value}
   end
 
-  # def move
-  # def copy - worth it?
+  def copy(from, to) do
+    %Copy{from: :lists.reverse(from), to: :lists.reverse(to)}
+  end
 end
