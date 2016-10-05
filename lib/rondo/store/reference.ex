@@ -39,6 +39,8 @@ defmodule Rondo.Store.Reference do
         end
       {:ok, %Rondo.Store{} = store} when mode == :descriptor ->
         {:ok, store}
+      {:ok, %Rondo.Stream{} = stream} when mode == :descriptor ->
+        {:ok, stream}
       {:ok, value} when mode == :value ->
         {:ok, value}
       _ when fallback == @required ->

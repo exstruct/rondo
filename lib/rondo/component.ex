@@ -5,6 +5,7 @@ defmodule Rondo.Component do
       use Rondo.Element
       use Rondo.Event
       use Rondo.Store
+      use Rondo.Stream
 
       def state(props, _) do
         props

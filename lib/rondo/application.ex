@@ -5,6 +5,7 @@ defmodule Rondo.Application do
   defstruct [phase: @init,
              components: %{},
              entry: nil,
+             streams: %{},
              action_store: %Rondo.Action.Store{}]
 
   def init(entry) do

@@ -38,6 +38,8 @@ defmodule Rondo.Tree do
         {instance, store} = put_action(action, component_path, store, state)
         actions = MapSet.put(actions, action)
         {instance, {children, actions, store}}
+      (%Rondo.Stream.Subscription{} = sub, _path, {children, actions, store}) ->
+        {sub, {children, actions, store}}
       (node, _, acc) ->
         {node, acc}
     end)

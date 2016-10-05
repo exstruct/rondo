@@ -41,6 +41,16 @@ defmodule Rondo.State do
       (%Rondo.Store.Reference{} = ref, path, acc) ->
         acc = Map.put(acc, path, ref)
         {ref, acc}
+      (%Rondo.Stream{component_path: nil} = stream, path, acc) ->
+        id = :erlang.phash2({component_path, path})
+        stream = %{stream | component_path: component_path, state_path: path, id: id}
+        acc = Map.put(acc, path, stream)
+        sub = %Rondo.Stream.Subscription{id: id}
+        {sub, acc}
+      (%Rondo.Stream{id: id} = stream, path, acc) ->
+        acc = Map.put(acc, path, stream)
+        sub = %Rondo.Stream.Subscription{id: id}
+        {sub, acc}
       (node, _, acc) ->
         {node, acc}
     end)
@@ -50,10 +60,13 @@ defmodule Rondo.State do
     {nil, store}
   end
   defp lookup(children, store) do
-    Enum.reduce(children, {%{}, store}, fn({path, descriptor}, {cache, store}) ->
-      {state, store} = Rondo.State.Store.mount(store, descriptor)
-      cache = Map.put(cache, path, state)
-      {cache, store}
+    Enum.reduce(children, {%{}, store}, fn
+      ({_, %Rondo.Stream{}}, acc) ->
+        acc
+      ({path, descriptor}, {cache, store}) ->
+        {state, store} = Rondo.State.Store.mount(store, descriptor)
+        cache = Map.put(cache, path, state)
+        {cache, store}
     end)
   end
 
