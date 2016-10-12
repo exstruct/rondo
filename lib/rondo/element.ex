@@ -34,6 +34,14 @@ defimpl Rondo.Diffable, for: Rondo.Element do
   end
 end
 
+defimpl Rondo.Patchable, for: Rondo.Element do
+  def patch(%{props: props, children: children} = el, doc) do
+    %{"props" => props, "children" => children} =
+      @protocol.Map.patch(%{"props" => props, "children" => children}, doc)
+    %{el | props: props, children: children}
+  end
+end
+
 defimpl Rondo.Traverser, for: Rondo.Element do
   def traverse(node, path, acc, prewalk, postwalk) do
     {node = %{props: props, children: children}, acc} = prewalk.(node, path, acc)

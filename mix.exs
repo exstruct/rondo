@@ -28,6 +28,7 @@ defmodule Rondo.Mixfile do
      {:triq, github: "krestenkrab/triq", only: test_modes},
      {:benchfella, "~> 0.3.1", only: test_modes},
      {:excoveralls, "~> 0.5.1", only: test_modes},
+     {:jsx, ">= 0.0.0", only: test_modes},
      {:ex_doc, ">= 0.0.0", only: :dev}]
   end
 

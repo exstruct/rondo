@@ -23,8 +23,9 @@ defmodule Rondo do
   end
 
   def diff(current, previous) do
-    Rondo.Diff.diff(current, previous)
-    |> :lists.flatten()
+    current
+    |> Rondo.Diff.diff(previous)
+    |> Rondo.Patch.to_patch()
   end
 
   def submit_action(app, store, ref, data) do

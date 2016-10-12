@@ -116,3 +116,10 @@ defimpl Rondo.Diffable, for: Rondo.Action.Store do
     Map.values(affordances) |> :maps.from_list()
   end
 end
+
+# TODO
+# defimpl Rondo.Patchable, for: Rondo.Action.Store do
+#   def patch(%{affordances: affordances} = prev, doc) do
+#     @protocol.Map.patch(affordances, doc)
+#   end
+# end

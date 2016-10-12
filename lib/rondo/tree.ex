@@ -9,9 +9,9 @@ defmodule Rondo.Tree do
     tree = %__MODULE__{children: %{}, actions: MapSet.new()}
     init(tree, descriptor, component_path, state, store)
   end
-  def init(tree = %{descriptor: descriptor, actions: actions}, descriptor, component_path, state, store) do
+  def init(tree = %{descriptor: descriptor, actions: actions}, descriptor, _component_path, _state, store) do
     store = Enum.reduce(actions, store, fn(action, store) ->
-      {_, store} = put_action(action, component_path, store, state)
+      {_, store} = Rondo.Action.Store.put(store, action)
       store
     end)
     {tree, store}
@@ -20,6 +20,13 @@ defmodule Rondo.Tree do
     {root, {children, actions, store}} = traverse(descriptor, component_path, state, store)
     tree = %{tree | descriptor: descriptor, root: root, children: children, actions: actions}
     {tree, store}
+  end
+
+  def add_actions(%{actions: actions}, store) do
+    Enum.reduce(actions, store, fn(action, store) ->
+      {_, store} = Rondo.Action.Store.put(store, action)
+      store
+    end)
   end
 
   def traverse(descriptor, component_path, state, store) do
@@ -34,26 +41,27 @@ defmodule Rondo.Tree do
         {ref, acc}
       (%Rondo.Action{reference: nil}, _path, acc) ->
         {nil, acc}
-      (%Rondo.Action{} = action, _path, {children, actions, store}) ->
-        {instance, store} = put_action(action, component_path, store, state)
-        actions = MapSet.put(actions, action)
-        {instance, {children, actions, store}}
-      (%Rondo.Stream.Subscription{} = sub, _path, {children, actions, store}) ->
-        {sub, {children, actions, store}}
+      (%Rondo.Action{} = action, _path, {children, actions, store} = acc) ->
+        case resolve_action(action, component_path, state) do
+          nil ->
+            {nil, acc}
+          action ->
+            actions = MapSet.put(actions, action)
+            {instance, store} = Rondo.Action.Store.put(store, action)
+            {instance, {children, actions, store}}
+        end
       (node, _, acc) ->
         {node, acc}
     end)
   end
 
-  defp put_action(action = %{reference: reference, events: events}, component_path, store, %{children: children}) do
+  defp resolve_action(action = %{reference: reference, events: events}, component_path, %{children: children}) do
     case resolve(reference, children, component_path) do
       nil ->
-        {nil, store}
+        nil
       descriptor ->
         events = resolve_events(events, component_path, children, [])
-        action = %{action | reference: descriptor,
-                            events: events}
-        Rondo.Action.Store.put(store, action)
+        %{action | reference: descriptor, events: events}
     end
   end
 

@@ -1,7 +1,6 @@
 defmodule Test.Rondo.Diff do
   use Test.Rondo.Case
   import Rondo.Element
-  alias Rondo.Operation.{Copy,Replace,Remove}
 
   context :simple do
     defmodule Component do
@@ -25,7 +24,7 @@ defmodule Test.Rondo.Diff do
         ]) |> render()
 
       # TODO this should really just do a copy-remove
-      assert [%Replace{}, %Remove{}] =
+      assert %{} =
         Rondo.diff(second, first)
 
     "switch" ->
@@ -42,7 +41,7 @@ defmodule Test.Rondo.Diff do
         ]) |> render()
 
       # TODO this should be two copies
-      assert [%Replace{}, %Replace{}] =
+      assert %{} =
         Rondo.diff(second, first)
 
     "insert" ->
@@ -59,7 +58,7 @@ defmodule Test.Rondo.Diff do
           el("Second")
         ]) |> render()
 
-      assert [%Replace{}, %Copy{}] =
+      assert %{} =
         Rondo.diff(second, first)
 
     "keyed" ->
@@ -75,7 +74,7 @@ defmodule Test.Rondo.Diff do
           el("First", %{key: "f"}, [2])
         ]) |> render()
 
-      assert [%Copy{}, %Replace{}, %Copy{}, %Replace{}] =
+      assert %{} =
         Rondo.diff(second, first)
   end
 
@@ -129,7 +128,7 @@ defmodule Test.Rondo.Diff do
         _diff = diff
         _new = new
 
-        Enum.count(diff) >= 0
+        true
       end
     end
   end

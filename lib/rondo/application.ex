@@ -73,3 +73,11 @@ defimpl Rondo.Diffable, for: Rondo.Application do
     @protocol.Map.diff(curr, prev, path)
   end
 end
+
+defimpl Rondo.Patchable, for: Rondo.Application do
+  def patch(%{components: components, action_store: affordances} = app, doc) do
+    %{0 => components, 1 => affordances} =
+      @protocol.Map.patch(%{0 => components, 1 => affordances}, doc)
+    %{app | components: components, action_store: affordances}
+  end
+end
