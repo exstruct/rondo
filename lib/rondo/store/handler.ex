@@ -14,4 +14,5 @@ defmodule Rondo.Store.Handler do
     {state :: term, value :: term}
   defcallback handle_update(state :: term, new_value :: term) ::
     {state :: term, value :: term}
+  defcallback stop(state :: term) :: :ok
 end

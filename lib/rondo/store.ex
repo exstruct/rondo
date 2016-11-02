@@ -38,17 +38,17 @@ defmodule Rondo.Store do
     case Map.fetch(instances, key) do
       {:ok, %{type: ^type, props: ^props, value: value}} ->
         {value, store}
-      {:ok, %{type: ^type, instance: instance, value: value}} ->
-        {value, instance} = type.update(instance, value, props)
+      {:ok, %{type: ^type, instance: instance}} ->
+        {instance, value} = type.update(instance, props)
         descriptor = %{type: type, props: props, value: value, instance: instance}
         {value, %{store | instances: Map.put(instances, key, descriptor)}}
       {:ok, %{type: t, instance: prev}} ->
         t.stop(prev)
-        {value, instance} = type.create(props, key)
+        {instance, value} = type.create(key, props)
         descriptor = %{type: type, props: props, value: value, instance: instance}
         {value, %{store | instances: Map.put(instances, key, descriptor)}}
       :error ->
-        {value, instance} = type.create(props, key)
+        {instance, value} = type.create(key, props)
         descriptor = %{type: type, props: props, value: value, instance: instance}
         {value, %{store | instances: Map.put(instances, key, descriptor)}}
     end
@@ -61,7 +61,7 @@ defmodule Rondo.Store do
   def handle_info(%{instances: instances} = store, {key, value} = msg) do
     case Map.fetch(instances, key) do
       {:ok, %{type: type, instance: instance} = descriptor} ->
-        {value, instance} = type.handle_message(instance, value)
+        {instance, value} = type.handle_message(instance, value)
         descriptor = %{descriptor | value: value, instance: instance}
         %{store | instances: Map.put(instances, key, descriptor)}
       _ ->
@@ -92,6 +92,7 @@ defmodule Rondo.Store do
     %{store | ephemeral: ephemeral}
   end
 
+  @compile {:inline, descriptor_key: 1}
   defp descriptor_key(%{component_type: ct, component_path: cp, state_path: sp}) do
     :erlang.phash2({ct, cp, sp})
   end

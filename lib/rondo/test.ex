@@ -10,7 +10,10 @@ defmodule Rondo.Test do
     |> render(state_store, context)
   end
   def render(app, state_store, context) do
-    Rondo.render(app, state_store, context)
+    state_store = Rondo.Store.initialize(state_store)
+    {app, state_store} = Rondo.render(app, state_store, context)
+    state_store = Rondo.Store.finalize(state_store)
+    {app, state_store}
   end
 
   def render_shallow(element, state_store, context \\ %{})

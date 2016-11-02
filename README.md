@@ -16,46 +16,7 @@ end
 
 ## Usage
 
-Start by creating a store
-
-```elixir
-defmodule MyApp.Store do
-  defstruct [stores: %{}]
-
-  defimpl Rondo.State.Store do
-    def mount(%{stores: stores} = store, %{props: initial, type: :ephemeral} = descriptor) do
-      stores = Map.put_new(stores, descriptor, initial)
-      {Map.get(stores, descriptor), %{store | stores: stores}}
-    end
-
-    def handle_info(store, _info) do
-      store
-    end
-
-    def handle_action(store, descriptor, update_fn) do
-      {prev, store} = mount(store, descriptor)
-      value = update_fn.(prev)
-      stores = Map.put(store.stores, descriptor, value)
-      {:ok, %{store | stores: stores}}
-    end
-
-    def encode(%{stores: stores}) do
-      stores
-      |> :erlang.term_to_binary()
-      |> Base.url_encode64()
-    end
-
-    def decode_into(store, bin) do
-      stores = bin
-      |> Base.url_decode64!()
-      |> :erlang.binary_to_term()
-      %{store | stores: stores}
-    end
-  end
-end
-```
-
-Now define an action with an affordance (in [jsonschema](http://json-schema.org/) format)
+First, define an action with an affordance (in [jsonschema](http://json-schema.org/) format)
 
 ```elixir
 defmodule MyApp.Action.Increment do
@@ -98,7 +59,7 @@ We can now render the app
 
 ```elixir
 # Set up our store and app
-store = %MyApp.Store{}
+store = Rondo.Store.new()
 app = Rondo.create_application(MyApp.Component)
 
 # Perform the initial render
