@@ -3,7 +3,7 @@ defmodule Rondo.Tree do
 
   alias Rondo.Path
   alias Rondo.Component.Pointer
-  alias Rondo.Store.Reference
+  alias Rondo.State.Reference
 
   def init(nil, descriptor, component_path, state, store) do
     tree = %__MODULE__{children: %{}, actions: MapSet.new()}
@@ -88,7 +88,7 @@ defmodule Rondo.Tree do
         descriptor
     end
   end
-  defp resolve(%Rondo.Store{} = store, _, _) do
+  defp resolve(%Rondo.Store.Instance{} = store, _, _) do
     store
   end
 end

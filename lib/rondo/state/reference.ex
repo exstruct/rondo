@@ -1,9 +1,9 @@
-defmodule Rondo.Store.Reference do
+defmodule Rondo.State.Reference do
   defstruct [:state_path, :fallback]
 
   defmacro __using__(_) do
     quote do
-      import Rondo.Store.Reference, only: [ref: 1, ref: 2]
+      import Rondo.State.Reference, only: [ref: 1, ref: 2]
     end
   end
 
@@ -37,7 +37,7 @@ defmodule Rondo.Store.Reference do
           :error ->
             resolve(fallback, state, mode)
         end
-      {:ok, %Rondo.Store{} = store} when mode == :descriptor ->
+      {:ok, %Rondo.Store.Instance{} = store} when mode == :descriptor ->
         {:ok, store}
       {:ok, %Rondo.Stream{} = stream} when mode == :descriptor ->
         {:ok, stream}

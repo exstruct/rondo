@@ -1,5 +1,5 @@
 defmodule Rondo.Stream do
-  defstruct [:component_path, :state_path, :id]
+  defstruct [:component_type, :component_path, :state_path, :id]
 
   defmacro __using__(_) do
     quote do

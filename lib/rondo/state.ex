@@ -5,14 +5,14 @@ defmodule Rondo.State do
     defstruct [:path]
   end
 
-  def init(nil, descriptor, component_path, store) do
-    init(%__MODULE__{cache: %{}}, descriptor, component_path, store)
+  def init(nil, descriptor, type, component_path, store) do
+    init(%__MODULE__{cache: %{}}, descriptor, type, component_path, store)
   end
-  def init(%{descriptor: descriptor} = state, descriptor, component_path, store) do
+  def init(%{descriptor: descriptor} = state, descriptor, _type, component_path, store) do
     resolve(state, component_path, store)
   end
-  def init(prev, descriptor, component_path, store) do
-    {partial, children} = traverse(descriptor, component_path)
+  def init(prev, descriptor, type, component_path, store) do
+    {partial, children} = traverse(descriptor, component_path, type)
     %{prev | descriptor: descriptor, partial: partial, children: children, root: partial}
     |> resolve(component_path, store)
   end
@@ -26,24 +26,24 @@ defmodule Rondo.State do
     end
   end
 
-  defp traverse(nil, _) do
+  defp traverse(nil, _, _) do
     {nil, %{}}
   end
-  defp traverse(descriptor, component_path) do
+  defp traverse(descriptor, component_path, type) do
     Rondo.Traverser.postwalk(descriptor, [], %{}, fn
-      (%Rondo.Store{component_path: nil} = store, path, acc) ->
-        store = %{store | component_path: component_path, state_path: path}
+      (%Rondo.Store.Instance{component_path: nil} = store, path, acc) ->
+        store = %{store | component_type: type, component_path: component_path, state_path: path}
         acc = Map.put(acc, path, store)
         {%Pointer{path: path}, acc}
-      (%Rondo.Store{} = store, path, acc) ->
+      (%Rondo.Store.Instance{} = store, path, acc) ->
         acc = Map.put(acc, path, store)
         {%Pointer{path: path}, acc}
-      (%Rondo.Store.Reference{} = ref, path, acc) ->
+      (%Rondo.State.Reference{} = ref, path, acc) ->
         acc = Map.put(acc, path, ref)
         {ref, acc}
       (%Rondo.Stream{component_path: nil} = stream, path, acc) ->
         id = :erlang.phash2({component_path, path})
-        stream = %{stream | component_path: component_path, state_path: path, id: id}
+        stream = %{stream | component_type: type, component_path: component_path, state_path: path, id: id}
         acc = Map.put(acc, path, stream)
         sub = %Rondo.Stream.Subscription{id: id}
         {sub, acc}
@@ -64,7 +64,7 @@ defmodule Rondo.State do
       ({_, %Rondo.Stream{}}, acc) ->
         acc
       ({path, descriptor}, {cache, store}) ->
-        {state, store} = Rondo.State.Store.mount(store, descriptor)
+        {state, store} = Rondo.Store.mount(store, descriptor)
         cache = Map.put(cache, path, state)
         {cache, store}
     end)
@@ -72,12 +72,12 @@ defmodule Rondo.State do
 
   defp insert(%{partial: partial} = state, component_path, cache, store) do
     {root, _} = Rondo.Traverser.postwalk(partial, [], nil, fn
-      (%Rondo.Store.Reference{} = ref, _, acc) ->
-        case Rondo.Store.Reference.resolve(ref, cache, :value) do
+      (%Rondo.State.Reference{} = ref, _, acc) ->
+        case Rondo.State.Reference.resolve(ref, cache, :value) do
           {:ok, value} ->
             {value, acc}
           :error ->
-            raise Rondo.Store.Reference.Error, reference: ref, component_path: component_path
+            raise Rondo.State.Reference.Error, reference: ref, component_path: component_path
         end
       (%Pointer{path: path}, _, acc) ->
         value = Map.get(cache, path)

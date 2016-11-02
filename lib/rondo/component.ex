@@ -31,9 +31,9 @@ defmodule Rondo.Component do
   alias Rondo.State
   alias Rondo.Tree
 
-  def mount(component = %{element: element, state: state}, path, context, state_store, action_store) do
+  def mount(component = %{element: %{type: type} = element, state: state}, path, context, state_store, action_store) do
     state_descriptor = get_state(element, context)
-    case State.init(state, state_descriptor, path, state_store) do
+    case State.init(state, state_descriptor, type, path, state_store) do
       {^state, state_store} ->
         %{tree: tree} = component
         action_store = Tree.add_actions(tree, action_store)
@@ -45,7 +45,7 @@ defmodule Rondo.Component do
         {component, state_store, action_store}
     end
   rescue
-    e in Rondo.Store.Reference.Error ->
+    e in Rondo.State.Reference.Error ->
       e = %{e | component_type: element.type}
       reraise e, System.stacktrace
   end

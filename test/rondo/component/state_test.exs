@@ -48,7 +48,7 @@ defmodule Test.Rondo.Component.State do
       assert_path app, [0], "Mike"
 
     "with context" ->
-      {app, _store} = render(Component, %TestStore{}, %{name: "Joe"})
+      {app, _store} = render(Component, Rondo.Store.new, %{name: "Joe"})
 
       assert_path app, [0], "Joe"
   end
@@ -76,11 +76,13 @@ defmodule Test.Rondo.Component.State do
     "modified state" ->
       {app, store} = render(Component)
 
-      store = TestStore.update_all(store, fn({descriptor, _value}) ->
-        {descriptor, "Robert"}
+      ephemeral = store.ephemeral
+      |> Stream.map(fn({descriptor, {props_hash, _prev}}) ->
+        {descriptor, {props_hash, "Robert"}}
       end)
+      |> Enum.into(%{})
 
-      {app, _store} = render(app, store)
+      {app, _store} = render(app, %{store | ephemeral: ephemeral})
 
       assert_path app, [0], "Robert"
   end
@@ -116,11 +118,13 @@ defmodule Test.Rondo.Component.State do
     "updated_ref" ->
       {app, store} = render(Second)
 
-      store = TestStore.update_all(store, fn({descriptor, _value}) ->
-        {descriptor, %{name: "Robert"}}
+      ephemeral = store.ephemeral
+      |> Stream.map(fn({descriptor, {props_hash, _prev}}) ->
+        {descriptor, {props_hash, %{name: "Robert"}}}
       end)
+      |> Enum.into(%{})
 
-      {app, _store} = render(app, store)
+      {app, _store} = render(app, %{store | ephemeral: ephemeral})
 
       assert_path app, [0], "Robert"
   end
@@ -198,7 +202,7 @@ defmodule Test.Rondo.Component.State do
     end
   after
     "render" ->
-      assert_raise Rondo.Store.Reference.Error, fn() ->
+      assert_raise Rondo.State.Reference.Error, fn() ->
         render(Component)
       end
   end

@@ -7,7 +7,7 @@ defmodule Rondo.Event do
     end
   end
 
-  alias Rondo.Store.Reference
+  alias Rondo.State.Reference
 
   def event(ref, handler) do
     event(ref, handler, %{})
@@ -15,7 +15,7 @@ defmodule Rondo.Event do
   def event(%Reference{} = ref, handler, props) do
     %__MODULE__{reference: ref, handler: handler, props: props}
   end
-  def event(%Rondo.Store{} = store, handler, props) do
+  def event(%Rondo.Store.Instance{} = store, handler, props) do
     %__MODULE__{reference: store, handler: handler, props: props}
   end
   def event(nil, handler, props) do

@@ -59,7 +59,7 @@ defmodule Rondo do
     apply_descriptors(descriptors, store, streams)
   end
   defp apply_descriptors([{descriptor, update_fn} | descriptors], store, streams) do
-    case Rondo.State.Store.handle_action(store, descriptor, update_fn) do
+    case Rondo.Store.handle_action(store, descriptor, update_fn) do
       {:ok, store} ->
         apply_descriptors(descriptors, store, streams)
       {:error, error, store} ->

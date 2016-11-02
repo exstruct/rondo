@@ -53,10 +53,10 @@ defmodule Rondo.Router do
   end
 
   def store(%{id: component_path}) do
-    %Rondo.Store{
+    %Rondo.Store.Instance{
       component_path: component_path,
       state_path: [:route],
-      type: Rondo.Router,
+      type: :ephemeral,
       props: nil
     }
   end

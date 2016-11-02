@@ -6,13 +6,12 @@ defmodule Test.Rondo.Case do
       use Benchfella
       import ExProf.Macro
       import Rondo.Test
-      alias Rondo.Test.Store, as: TestStore
       import unquote(__MODULE__), only: [render: 1, context: 2]
     end
   end
 
   def render(element) do
-    Rondo.Test.render(element, Rondo.Test.Store.init(%{}))
+    Rondo.Test.render(element, Rondo.Store.new(%{}))
   end
 
   defmacro context(name, [do: body, after: tests]) do
