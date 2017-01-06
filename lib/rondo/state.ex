@@ -17,9 +17,12 @@ defmodule Rondo.State do
     |> resolve(component_path, store)
   end
 
-  defp resolve(%{cache: cache, children: children} = state, component_path, store) do
+  defp resolve(%{cache: cache, children: children, root: root} = state, component_path, store) do
     case lookup(children, store) do
       {^cache, store} ->
+        state = %{state | root: Enum.reduce(cache, root, fn({path, value}, root) ->
+          put_in(root, path, value)
+        end)}
         {state, store}
       {cache, store} ->
         insert(state, component_path, cache, store)
